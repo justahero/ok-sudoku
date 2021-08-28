@@ -5,7 +5,7 @@ use crate::{Sudoku, sudoku::GridError};
 parser! {
     grammar sudoku_parser() for str {
         rule empty() -> u8
-            = $(['-']) { 0 }
+            = $(['-' | '.' ]) { 0 }
 
         rule number() -> u8
             = n:$(['0'..='9']) { str::parse::<u8>(n).unwrap() }

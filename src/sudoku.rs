@@ -48,6 +48,13 @@ impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for y in 0..self.num_rows() {
             for x in 0..self.num_cols() {
+                match (y, x) {
+                    (_, 3) | (_, 6) => write!(f, " ")?,
+                    (3, 0) | (6, 0) => write!(f, "\n\n")?,
+                    (_, 0)          => write!(f, "\n")?,
+                    _ => {}
+                }
+
                 write!(f, "{}", self.get(x, y).unwrap())?;
             }
         }

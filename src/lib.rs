@@ -1,9 +1,9 @@
 mod algorithm;
-mod grid;
+mod sudoku;
 mod layer;
 mod parser;
 mod solver;
 
-pub use grid::Grid;
+pub use sudoku::Sudoku;
 pub use layer::Layer;
 pub use solver::*;

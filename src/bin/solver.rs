@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 
 use clap::{App, Arg};
-use sudoku::Grid;
+use sudoku::{Sudoku, Solver};
 
 fn main() {
     let matches = App::new("Sudoku Solver CLI")
@@ -15,8 +15,10 @@ fn main() {
         .get_matches();
 
     if let Some(grid) = matches.value_of("grid") {
-        let grid = Grid::try_from(grid).unwrap();
-        let solver = Solver::new();
-        // println!("Grid: {}", Solver::new(grid).solve());
+        let grid = Sudoku::try_from(grid).unwrap();
+        match Solver::solve(&grid) {
+            Ok(result) => println!("Solved: {}", grid),
+            Err(err) => println!("Failed to solve grid: {}", err),
+        }
     }
 }

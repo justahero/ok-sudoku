@@ -1,9 +1,9 @@
 use peg::parser;
 
-use crate::{Grid, grid::GridError};
+use crate::{Sudoku, sudoku::GridError};
 
 parser! {
-    grammar grid_parser() for str {
+    grammar sudoku_parser() for str {
         rule empty() -> u8
             = $(['-']) { 0 }
 
@@ -19,24 +19,24 @@ parser! {
         pub(crate) rule numbers() -> Vec<u8>
             = n:field() * { n }
 
-        pub(crate) rule parse() -> Grid
-            = numbers:numbers() { Grid::new(numbers).unwrap() }
+        pub(crate) rule parse() -> Sudoku
+            = numbers:numbers() { Sudoku::new(numbers).unwrap() }
     }
 }
 
-pub fn parse_grid(grid: &str) -> Result<Grid, GridError> {
-    grid_parser::parse(grid)
+pub fn parse_sudoku(grid: &str) -> Result<Sudoku, GridError> {
+    sudoku_parser::parse(grid)
         .map_err(|e| GridError::ParseError(e.to_string()))
 }
 
 #[cfg(test)]
 mod test {
-    use crate::parser::parse_grid;
-    use crate::parser::grid_parser;
+    use crate::parser::parse_sudoku;
+    use crate::parser::sudoku_parser;
 
     #[test]
-    fn test_parse_grid() {
-        let grid = r"
+    fn test_parse_sudoku() {
+        let sudoku = r"
             --- --- 984
             4-- 8-- 25-
             -8- -49 --3
@@ -47,12 +47,12 @@ mod test {
             6-2 -15 37-
             --5 -6- ---
         ";
-        assert!(parse_grid(grid).is_ok());
+        assert!(parse_sudoku(sudoku).is_ok());
     }
 
     #[test]
     fn test_parse_single_field() {
-        let numbers = grid_parser::numbers("123 -1- 1-2");
+        let numbers = sudoku_parser::numbers("123 -1- 1-2");
         assert!(numbers.is_ok());
 
         let numbers = numbers.unwrap();

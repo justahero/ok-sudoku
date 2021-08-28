@@ -1,29 +1,42 @@
-use crate::{Grid, grid::Value};
+use std::fmt;
+
+use crate::{Sudoku, sudoku::Value};
 
 pub enum SolverError {
+    /// 
+    Unsolvable(String),
+}
 
+impl fmt::Display for SolverError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            SolverError::Unsolvable(err) => format!("Unsolvable grid: {}", err),
+        };
+        write!(f, "{}", s)
+    }
 }
 
 pub struct Solver {}
 
 impl Solver {
     /// 
-    pub fn solve(grid: &Grid) -> Result<Grid, SolverError> {
-        todo!();
+    pub fn solve(sudoku: &Sudoku) -> Result<Sudoku, SolverError> {
+        let sudoku = sudoku.clone();
+        Self::solve_sudoku(sudoku)
     }
 
-    fn solve_grid(grid: Grid) {
-        for y in 0..grid.num_rows() {
-            for x in 0..grid.num_cols() {
-                if grid.get(x, y) == Value::Unset {
+    fn solve_sudoku(sudoku: Sudoku) -> Result<Sudoku, SolverError> {
+        for y in 0..sudoku.num_rows() {
+            for x in 0..sudoku.num_cols() {
+                if sudoku.get(x, y) == Some(&Value::Unset) {
                     
                 }
             }
         }
+        Ok(sudoku)
     }
 }
 
 #[cfg(test)]
 mod tests {
-
 }

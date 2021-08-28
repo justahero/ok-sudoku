@@ -1,6 +1,6 @@
 use std::{convert::TryFrom, fmt::{self, Debug, Display}};
 
-use crate::parser::parse_grid;
+use crate::parser::parse_sudoku;
 
 #[derive(Debug)]
 pub enum GridError {
@@ -20,7 +20,7 @@ impl Display for GridError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Value {
     /// There is no value set, initial value of a field
     Unset,
@@ -28,12 +28,34 @@ pub enum Value {
     Number(u8),
 }
 
-pub struct Grid {
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::Unset => write!(f, ".")?,
+            Value::Number(n) => write!(f, "{}", n)?,
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
+pub struct Sudoku {
     /// The list of all fields
     fields: Vec<Value>,
 }
 
-impl Grid {
+impl fmt::Display for Sudoku {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for y in 0..self.num_rows() {
+            for x in 0..self.num_cols() {
+                write!(f, "{}", self.get(x, y).unwrap())?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Sudoku {
     const ROWS: u32 = 9;
     const COLS: u32 = 9;
     const NUM_FIELDS: u32 = 81;
@@ -74,14 +96,20 @@ impl Grid {
         let index = x + y * Self::ROWS;
         self.fields.get(index as usize)
     }
+
+    /// Naive version to check if Sudoku is solved
+    /// **Note** ignores any checks that each line, row and block contains of digits 1..9
+    pub fn is_solved(&self) -> bool {
+        self.fields.iter().all(|f| *f != Value::Unset )
+    }
 }
 
 /// Parses the Grid from a layout given as a string.
-impl TryFrom<&str> for Grid {
+impl TryFrom<&str> for Sudoku {
     type Error = GridError;
 
     fn try_from(grid: &str) -> Result<Self, Self::Error> {
-        parse_grid(grid)
+        parse_sudoku(grid)
     }
 }
 
@@ -89,11 +117,11 @@ impl TryFrom<&str> for Grid {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::Grid;
+    use crate::Sudoku;
 
     #[test]
     fn parses_from_string() {
-        let grid = r"
+        let sudoku = r"
             --- --- 984
             4-- 8-- 25-
             -8- -49 --3
@@ -104,11 +132,11 @@ mod tests {
             6-2 -15 37-
             --5 -6- ---
         ";
-        assert!(Grid::try_from(grid).is_ok());
+        assert!(Sudoku::try_from(sudoku).is_ok());
     }
 
     #[test]
-    fn creates_grid() {
+    fn creates_sudoku() {
         let numbers = vec![
             0, 0, 0, 0, 0, 0, 9, 8, 4,
             4, 0, 0, 8, 0, 0, 2, 5, 0,
@@ -120,11 +148,11 @@ mod tests {
             6, 0, 2, 0, 1, 5, 3, 7, 0,
             0, 0, 5, 0, 6, 0, 0, 0, 0,
         ];
-        assert!(Grid::new(numbers).is_ok());
+        assert!(Sudoku::new(numbers).is_ok());
     }
 
     #[test]
-    fn create_grid_fails_with_wrong_numbers() {
+    fn create_sudoku_fails_with_wrong_numbers() {
         let numbers = vec![
             0, 0, 0, 0, 0, 0, 9, 8, 4,
             4, 0, 0, 8, 0, 0, 2, 5, 0,
@@ -136,11 +164,11 @@ mod tests {
             6, 0, 2, 0, 1, 5, 3, 7, 0,
             0, 0, 5, 0, 6, 0, 0, 0, 11,
         ];
-        assert!(Grid::new(numbers).is_err());
+        assert!(Sudoku::new(numbers).is_err());
     }
 
     #[test]
-    fn creates_grid_fails_without_numbers() {
-        assert!(Grid::new(vec![]).is_err());
+    fn creates_sudoku_fails_without_numbers() {
+        assert!(Sudoku::new(vec![]).is_err());
     }
 }

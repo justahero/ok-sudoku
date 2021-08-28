@@ -1,19 +1,22 @@
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 
-use ok_sudoku::Grid;
+use clap::{App, Arg};
+use sudoku::Grid;
 
 fn main() {
-    let grid = r"##
-    --- --- 984
-    4-- 8-- 25-
-    -8- -49 --3
-    9-6 157 8-2
-    --- --- -4-
-    --- -8- 196
-    -34 928 56-
-    6-2 -15 37-
-    --5 -6- ---
-    ##";
+    let matches = App::new("Sudoku Solver CLI")
+        .version("0.1.0")
+        .author("Sebastian Ziebell")
+        .about("Solve sudokus from the command line")
+        .arg(Arg::with_name("grid")
+            .short("g")
+            .long("grid")
+            .help("The 9x9 grid as a single contiguous string"))
+        .get_matches();
 
-    let _grid = Grid::try_from(grid);
+    if let Some(grid) = matches.value_of("grid") {
+        let grid = Grid::try_from(grid).unwrap();
+        let solver = Solver::new();
+        // println!("Grid: {}", Solver::new(grid).solve());
+    }
 }

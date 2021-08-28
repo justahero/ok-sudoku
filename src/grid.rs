@@ -40,13 +40,9 @@ impl Grid {
 
     /// Create a new grid from a list of values
     pub fn new(fields: Vec<u8>) -> Result<Self, GridError> {
-        dbg!(fields.len());
-
         if fields.len() != Self::NUM_FIELDS as usize {
             return Err(GridError::Invalid(format!("Invalid number of fields - found {} elements", fields.len())));
         }
-
-        dbg!(&fields);
 
         // map numbers to values
         let fields: Result<Vec<_>, _> = fields
@@ -62,6 +58,21 @@ impl Grid {
             Ok(fields) => Ok(Self { fields }),
             Err(err) => Err(err),
         }
+    }
+
+    #[inline(always)]
+    pub fn num_rows(&self) -> u32 {
+        Self::ROWS
+    }
+
+    #[inline(always)]
+    pub fn num_cols(&self) -> u32 {
+        Self::COLS
+    }
+
+    pub fn get(&self, x: u32, y: u32) -> Option<&Value> {
+        let index = x + y * Self::ROWS;
+        self.fields.get(index as usize)
     }
 }
 

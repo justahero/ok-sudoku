@@ -54,7 +54,6 @@ impl fmt::Display for Sudoku {
                     (_, 0)          => write!(f, "\n")?,
                     _ => {}
                 }
-
                 write!(f, "{}", self.get(x, y).unwrap())?;
             }
         }
@@ -100,8 +99,13 @@ impl Sudoku {
     }
 
     pub fn get(&self, x: u32, y: u32) -> Option<&Value> {
-        let index = x + y * Self::ROWS;
+        let index = x + y * self.num_rows();
         self.fields.get(index as usize)
+    }
+
+    pub fn set(&mut self, x: u32, y: u32, val: Value) {
+        let index = x + y * self.num_rows();
+        self.fields[index as usize] = val;
     }
 
     /// Naive version to check if Sudoku is solved

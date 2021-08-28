@@ -1,2 +1,3 @@
-# ok-sudoku
-An okay-ish soduku program to experiment with algorithms &amp; additional logical layers
+# Ok-Sudoku
+
+An okay-ish soduku program to experiment with algorithms & additional logical layers.

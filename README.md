@@ -6,6 +6,10 @@ An okay-ish soduku program to experiment with algorithms & additional logical la
 
 * [Emerentius/sudoku](https://github.com/Emerentius/sudoku/) repository
 
+## Test Sudokus
+
+* [Invalid Test Cases](http://sudopedia.enjoysudoku.com/Invalid_Test_Cases.html)
+
 ## References:
 
 * [Sudoku Solver](https://sudokuspoiler.azurewebsites.net/) - online

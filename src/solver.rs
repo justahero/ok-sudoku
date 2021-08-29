@@ -2,73 +2,101 @@ use std::fmt;
 
 use crate::sudoku::{Sudoku, Value};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum SolverError {
-    ///
-    Unsolvable(String),
+    /// There is no single solution found
+    Unsolvable,
+    /// There is more than one solutions
+    TooManySolutions(u32),
 }
 
 impl fmt::Display for SolverError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            SolverError::Unsolvable(err) => format!("Unsolvable grid: {}", err),
+            SolverError::Unsolvable => format!("No solution found."),
+            SolverError::TooManySolutions(n) => {
+                format!("There is no unique solution (count: {})", n)
+            }
         };
         write!(f, "{}", s)
     }
 }
 
+/// Holds the found solutions after solving the sudoku
+#[derive(Debug)]
 pub struct Solver {
-    sudoku: Sudoku,
+    /// The list of found solutions
+    solutions: Vec<Sudoku>,
 }
 
 impl Solver {
-    /// Brute Force Solver
+    /// Tries to find a single unique solution for the given Sudoku
     pub fn solve(sudoku: &Sudoku) -> Result<Sudoku, SolverError> {
-        let sudoku = sudoku.clone();
-        let mut solver = Self { sudoku };
-        if solver.solve_sudoku() {
-            Ok(solver.sudoku)
-        } else {
-            Err(SolverError::Unsolvable(format!("Failed to find solution!")))
+        let solutions = Self::solve_sudoku(&mut sudoku.clone());
+
+        match solutions.len() {
+            1 => Ok(solutions[0].clone()),
+            0 => Err(SolverError::Unsolvable),
+            n => Err(SolverError::TooManySolutions(n as u32)),
         }
     }
 
-    fn solve_sudoku(&mut self) -> bool {
-        for row in 0..self.sudoku.num_rows() {
-            for col in 0..self.sudoku.num_cols() {
-                if self.sudoku.get(row, col) == Some(&Value::Empty) {
+    /// Useful to find all possible solutions of a given Sudoku
+    /// **NOTE** can take a while to run.
+    pub fn find_all(sudoku: &Sudoku) -> Self {
+        let solutions = Self::solve_sudoku(&mut sudoku.clone());
+
+        Self { solutions }
+    }
+
+    /// Brute Force Solver using recursion, trying to find all solutions
+    fn solve_sudoku(sudoku: &mut Sudoku) -> Vec<Sudoku> {
+        if sudoku.is_solved() {
+            return vec![sudoku.clone()];
+        }
+
+        let mut results = Vec::new();
+
+        for row in 0..Sudoku::ROWS {
+            for col in 0..Sudoku::COLS {
+                if sudoku.get(row, col) == Some(&Value::Empty) {
                     for value in 1..=9 {
-                        if self.possible(row, col, value) {
-                            self.sudoku.set(row, col, Value::Number(value));
-                            if self.solve_sudoku() {
-                                return true;
-                            }
-                            self.sudoku.unset(row, col);
+                        if Self::possible(&sudoku, row, col, value) {
+                            sudoku.set(row, col, Value::Number(value));
+                            results.append(&mut Self::solve_sudoku(sudoku));
+                            sudoku.unset(row, col);
                         }
                     }
                     // unwind when no candidate was found
-                    return false;
+                    return results;
                 }
             }
         }
-        true
+        results
     }
 
     /// Slow check if the given value for field row, col can be set
-    fn possible(&self, row: u8, col: u8, value: u8) -> bool {
-        if let Some(_) = self.sudoku.get_row(row).find(|&v| Value::Number(value) == v) {
+    fn possible(sudoku: &Sudoku, row: u8, col: u8, value: u8) -> bool {
+        if let Some(_) = sudoku.get_row(row).find(|&v| Value::Number(value) == v) {
             return false;
         }
 
-        if let Some(_) = self.sudoku.get_col(col).find(|&v| Value::Number(value) == v) {
+        if let Some(_) = sudoku.get_col(col).find(|&v| Value::Number(value) == v) {
             return false;
         }
 
-        if let Some(_) = self.sudoku.get_block(row, col).find(|&v| Value::Number(value) == v) {
+        if let Some(_) = sudoku
+            .get_block(row, col)
+            .find(|&v| Value::Number(value) == v)
+        {
             return false;
         }
 
         true
+    }
+
+    pub fn solutions(&self) -> &[Sudoku] {
+        &self.solutions
     }
 }
 
@@ -76,11 +104,12 @@ impl Solver {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{Solver, Sudoku};
+    use crate::{solver::SolverError, Solver, Sudoku};
 
     #[test]
     fn solves_sudoku() {
         // taken from https://en.wikipedia.org/wiki/Sudoku
+        #[rustfmt::skip]
         let expected = vec![
             5, 3, 4, 6, 7, 8, 9, 1, 2,
             6, 7, 2, 1, 9, 5, 3, 4, 8,
@@ -116,9 +145,41 @@ mod tests {
     #[test]
     fn fails_to_solve_invalid_sudoku() {
         // unsolvable square from: http://sudopedia.enjoysudoku.com/Invalid_Test_Cases.html
-        let sudoku = "..9.287..8.6..4..5..3.....46.........2.71345.........23.....5..9..4..8.7..125.3..";
+        let sudoku =
+            "..9.287..8.6..4..5..3.....46.........2.71345.........23.....5..9..4..8.7..125.3..";
 
         let sudoku = Sudoku::try_from(sudoku).unwrap();
-        assert!(Solver::solve(&sudoku).is_err());
+        assert_eq!(SolverError::Unsolvable, Solver::solve(&sudoku).unwrap_err());
+    }
+
+    #[test]
+    fn finds_2_solutions() {
+        // Not Unique - 2 solutions: http://sudopedia.enjoysudoku.com/Invalid_Test_Cases.html
+        let sudoku =
+            ".39...12....9.7...8..4.1..6.42...79...........91...54.5..1.9..3...8.5....14...87.";
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
+
+        let solver = Solver::find_all(&sudoku);
+        assert_eq!(2, solver.solutions().len());
+
+        let expected = vec![
+            Sudoku::try_from(
+                "439658127156927384827431956342516798785294631691783542578149263263875419914362875",
+            )
+            .unwrap(),
+            Sudoku::try_from(
+                "439658127156927384827431956642513798785294631391786542578149263263875419914362875",
+            )
+            .unwrap(),
+        ];
+
+        assert_eq!(
+            SolverError::TooManySolutions(2),
+            Solver::solve(&sudoku).unwrap_err()
+        );
+        assert!(solver
+            .solutions()
+            .iter()
+            .all(|solution| expected.contains(solution)));
     }
 }

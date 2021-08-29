@@ -5,6 +5,7 @@ use super::{Strategy, algorithms::NakedSingle};
 /// The `StrategySolver` is the struct for solving Sudokus
 /// by applying logical strategies that humans can do.
 pub struct StrategySolver {
+    /// List of all strategies
     strategies: Vec<Box<dyn Strategy>>,
 }
 

@@ -1,4 +1,4 @@
-use crate::solver::SolverError;
+use crate::{Sudoku, solver::SolverError};
 
 use super::{Strategy, algorithms::NakedSingle};
 
@@ -20,7 +20,7 @@ impl StrategySolver {
     }
 
     /// Solve the Sudoku by applying solving steps.
-    pub fn solve() -> Result<(), SolverError> {
+    pub fn solve(&self, _sudoku: &Sudoku) -> Result<(), SolverError> {
         Ok(())
     }
 
@@ -32,5 +32,28 @@ impl StrategySolver {
     /// Adds a single strategy
     pub fn push_strategy(&mut self, strategy: Box<dyn Strategy>) {
         self.strategies.push(strategy);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::convert::TryFrom;
+
+    use crate::Sudoku;
+
+    use super::StrategySolver;
+
+    #[test]
+    fn solve_sudokus() {
+        // A few sudokus found here: https://sandiway.arizona.edu/sudoku/examples.html
+        let solver = StrategySolver::new();
+        let sudokus = vec![
+            r"...26.7.1 68..7..9. 19...45.. 82.1...4. ..46.29.. .5...3.28 ..93...74 .4..5.36 7.3.18...",
+        ];
+
+        for s in sudokus {
+            let sudoku = Sudoku::try_from(s).unwrap();
+            assert!(solver.solve(&sudoku).is_ok());
+        }
     }
 }

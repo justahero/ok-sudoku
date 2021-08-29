@@ -11,7 +11,7 @@ impl NakedSingle {
 }
 
 impl Strategy for NakedSingle {
-    fn find(&self, sudoku: &Sudoku) -> Option<Steps> {
+    fn find(&self, _sudoku: &Sudoku) -> Option<Steps> {
         None
     }
 }

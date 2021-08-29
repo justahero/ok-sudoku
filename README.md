@@ -8,4 +8,5 @@ An okay-ish soduku program to experiment with algorithms & additional logical la
 
 ## References:
 
+* [Recursive Brute Force Solver](https://medium.com/@ekapope.v/learning-recursive-algorithm-with-sudoku-solver-in-python-345623de98ae)
 * [Sudoku Strategy Families](https://www.sudokuwiki.org/Strategy_Families)

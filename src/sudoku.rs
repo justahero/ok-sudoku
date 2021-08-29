@@ -38,6 +38,15 @@ impl fmt::Display for Value {
     }
 }
 
+impl From<&Value> for u8 {
+    fn from(v: &Value) -> Self {
+        match v {
+            Value::Number(v) => *v,
+            Value::Unset => 0,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Sudoku {
     /// The list of all fields
@@ -65,7 +74,7 @@ impl fmt::Display for Sudoku {
 ///
 /// The grid is divided into the following rows, columns & indices
 ///
-/// ```
+/// ```text
 ///                               Blocks
 ///                   0              1              2
 ///             ┏━━━━━━━━━━━┓  ┏━━━━━━━━━━━┓  ┏━━━━━━━━━━━┓
@@ -95,20 +104,38 @@ impl fmt::Display for Sudoku {
 ///
 impl Sudoku {
     const BLOCK_SIZE: u8 = 3;
-    const ROWS: u32 = 9;
-    const COLS: u32 = 9;
+    const ROWS: u8 = 9;
+    const COLS: u8 = 9;
     const NUM_FIELDS: u32 = 81;
 
-    /// Returns the block index from given row, col
+    /// Returns the block index.
+    ///
+    /// Block indices map from the grid as follows
+    ///
+    ///   0 0 0 1 1 1 2 2 2
+    ///   0 0 0 1 1 1 2 2 2
+    ///   0 0 0 1 1 1 2 2 2
+    ///   3 3 3 4 4 4 5 5 5
+    ///   3 3 3 4 4 4 5 5 5
+    ///   3 3 3 4 4 4 5 5 5
+    ///   6 6 6 7 7 7 8 8 8
+    ///   6 6 6 7 7 7 8 8 8
+    ///   6 6 6 7 7 7 8 8 8
+    ///
     #[inline(always)]
-    pub(crate) fn block(row: u8, col: u8) -> u8 {
-        row % Self::BLOCK_SIZE + col % Self::BLOCK_SIZE
+    pub(crate) fn block(index: u8) -> u8 {
+        Self::row(index) % Self::BLOCK_SIZE + Self::col(index) % Self::BLOCK_SIZE
     }
 
     /// Returns the row from the given index
     #[inline(always)]
     pub(crate) fn row(index: u8) -> u8 {
-        0
+        index / Self::ROWS
+    }
+
+    #[inline(always)]
+    pub(crate) fn col(index: u8) -> u8 {
+        index % Self::COLS
     }
 }
 
@@ -136,21 +163,21 @@ impl Sudoku {
     }
 
     #[inline(always)]
-    pub fn num_rows(&self) -> u32 {
+    pub fn num_rows(&self) -> u8 {
         Self::ROWS
     }
 
     #[inline(always)]
-    pub fn num_cols(&self) -> u32 {
+    pub fn num_cols(&self) -> u8 {
         Self::COLS
     }
 
-    pub fn get(&self, row: u32, col: u32) -> Option<&Value> {
+    pub fn get(&self, row: u8, col: u8) -> Option<&Value> {
         let index = col + row * self.num_rows();
         self.fields.get(index as usize)
     }
 
-    pub fn set(&mut self, col: u32, row: u32, val: Value) {
+    pub fn set(&mut self, col: u8, row: u8, val: Value) {
         let index = col + row * self.num_rows();
         self.fields[index as usize] = val;
     }
@@ -159,6 +186,12 @@ impl Sudoku {
     /// **Note** ignores any checks that each line, row and block contains of digits 1..9
     pub fn is_solved(&self) -> bool {
         self.fields.iter().all(|f| *f != Value::Unset )
+    }
+
+    /// Returns all fields for the given row
+    pub fn get_row(&self, row: u8) -> impl Iterator<Item = &Value> + '_ {
+        let index = (row * Self::ROWS) as usize;
+        self.fields.iter().skip(index).take(9).into_iter()
     }
 
 //    /// Returns the row
@@ -181,7 +214,19 @@ impl TryFrom<&str> for Sudoku {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::Sudoku;
+    use crate::sudoku::Sudoku;
+
+    const SUDOKU: [u8; 81] = [
+        5, 3, 0, 0, 7, 0, 0, 0, 0,
+        6, 0, 0, 1, 9, 5, 0, 0, 0,
+        0, 9, 8, 0, 0, 0, 0, 6, 0,
+        8, 0, 0, 0, 6, 0, 0, 0, 3,
+        4, 0, 0, 8, 0, 3, 0, 0, 1,
+        7, 0, 0, 0, 2, 0, 0, 0, 6,
+        0, 6, 0, 0, 0, 0, 2, 8, 0,
+        0, 0, 0, 4, 1, 9, 0, 0, 5,
+        0, 0, 0, 0, 8, 0, 0, 7, 9,
+    ];
 
     #[test]
     fn parses_from_string() {
@@ -201,18 +246,7 @@ mod tests {
 
     #[test]
     fn creates_sudoku() {
-        let numbers = vec![
-            0, 0, 0, 0, 0, 0, 9, 8, 4,
-            4, 0, 0, 8, 0, 0, 2, 5, 0,
-            0, 8, 0, 0, 4, 9, 0, 0, 3,
-            9, 0, 6, 1, 5, 7, 8, 0, 2,
-            0, 0, 0, 0, 0, 0, 0, 4, 0,
-            0, 0, 0, 0, 8, 0, 1, 9, 6,
-            0, 3, 4, 9, 2, 8, 5, 6, 0,
-            6, 0, 2, 0, 1, 5, 3, 7, 0,
-            0, 0, 5, 0, 6, 0, 0, 0, 0,
-        ];
-        assert!(Sudoku::new(numbers).is_ok());
+        assert!(Sudoku::new(SUDOKU.to_vec()).is_ok());
     }
 
     #[test]
@@ -234,5 +268,13 @@ mod tests {
     #[test]
     fn creates_sudoku_fails_without_numbers() {
         assert!(Sudoku::new(vec![]).is_err());
+    }
+
+    #[test]
+    fn test_get_row_values() {
+        let sudoku = Sudoku::new(SUDOKU.to_vec()).unwrap();
+        let actual = sudoku.get_row(6).map(|v| v.into()).collect::<Vec<_>>();
+        let expected = vec![0u8, 6, 0, 0, 0, 0, 2, 8, 0];
+        assert_eq!(expected, actual);
     }
 }

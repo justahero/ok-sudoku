@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{Sudoku, sudoku::Value};
+use crate::sudoku::{Sudoku, Value};
 
 pub enum SolverError {
     /// 
@@ -32,16 +32,20 @@ impl Solver {
                     for value in 1..=9 {
                         if Self::possible(&sudoku, row, col, value) {
                             sudoku.set(row, col, Value::Number(value));
+                            if sudoku.is_solved() {
+                                return Ok(sudoku);
+                            }
+                            sudoku.set(row, col, Value::Unset);
                         }
                     }
                 }
             }
         }
-        Ok(sudoku)
+        Err(SolverError::Unsolvable(format!("Failed to find solution")))
     }
 
     /// Slow check if the given value for field x, y can be set
-    fn possible(sudoku: &Sudoku, row: u32, col: u32, value: u8) -> bool {
+    fn possible(sudoku: &Sudoku, row: u8, col: u8, value: u8) -> bool {
         false
     }
 }

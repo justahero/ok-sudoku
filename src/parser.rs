@@ -1,6 +1,6 @@
 use peg::parser;
 
-use crate::{Sudoku, sudoku::GridError};
+use crate::sudoku::{GridError, Sudoku};
 
 parser! {
     grammar sudoku_parser() for str {

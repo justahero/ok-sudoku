@@ -70,8 +70,8 @@ impl Debug for Sudoku {
 
 impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for row in 0..self.num_rows() {
-            for col in 0..self.num_cols() {
+        for row in 0..Self::ROWS {
+            for col in 0..Self::COLS {
                 match (row, col) {
                     (_, 3) | (_, 6) => write!(f, " ")?,
                     (3, 0) | (6, 0) => write!(f, "\n")?,
@@ -168,18 +168,18 @@ impl Sudoku {
     }
 
     pub fn get(&self, row: u8, col: u8) -> Option<&Value> {
-        let index = col + row * self.num_rows();
+        let index = col + row * Self::ROWS;
         self.fields.get(index as usize)
     }
 
     pub fn set(&mut self, row: u8, col: u8, val: Value) {
-        let index = col + row * self.num_rows();
+        let index = col + row * Self::ROWS;
         self.fields[index as usize] = val;
     }
 
     /// Unsets the field
     pub fn unset(&mut self, row: u8, col: u8) {
-        let index = col + row * self.num_rows();
+        let index = col + row * Self::ROWS;
         self.fields[index as usize] = Value::Empty;
     }
 

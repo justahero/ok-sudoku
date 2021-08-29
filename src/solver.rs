@@ -6,8 +6,10 @@ use crate::sudoku::{Sudoku, Value};
 pub enum SolverError {
     /// There is no single solution found
     Unsolvable,
-    /// There is more than one solutions
+    /// There is more than one solution
     TooManySolutions(u32),
+    /// There are too few given clues to run successfully
+    TooFewClues(u32),
 }
 
 impl fmt::Display for SolverError {
@@ -16,6 +18,9 @@ impl fmt::Display for SolverError {
             SolverError::Unsolvable => format!("No solution found."),
             SolverError::TooManySolutions(n) => {
                 format!("There is no unique solution (count: {})", n)
+            }
+            SolverError::TooFewClues(n) => {
+                format!("Too few clues given ({})", n)
             }
         };
         write!(f, "{}", s)

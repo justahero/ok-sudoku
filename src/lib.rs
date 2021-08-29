@@ -1,8 +1,8 @@
-mod algorithm;
 mod layer;
 mod parser;
-pub mod solver;
 pub mod sudoku;
+mod solver;
+mod strategy;
 mod types;
 
 pub use crate::solver::Solver;

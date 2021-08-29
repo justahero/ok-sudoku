@@ -56,6 +56,15 @@ impl From<&Value> for u8 {
     }
 }
 
+impl Value {
+    pub fn is_digit(&self) -> bool {
+        match self {
+            Value::Number(_) => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct Sudoku {
     /// The list of all fields
@@ -157,30 +166,27 @@ impl Sudoku {
         }
     }
 
-    #[inline(always)]
-    pub fn num_rows(&self) -> u8 {
-        Self::ROWS
-    }
-
-    #[inline(always)]
-    pub fn num_cols(&self) -> u8 {
-        Self::COLS
-    }
-
+    /// Returns the cell given by coordinates
     pub fn get(&self, row: u8, col: u8) -> Option<&Value> {
         let index = col + row * Self::ROWS;
         self.fields.get(index as usize)
     }
 
+    /// Sets the value of a specific cell given by coordinates
     pub fn set(&mut self, row: u8, col: u8, val: Value) {
         let index = col + row * Self::ROWS;
         self.fields[index as usize] = val;
     }
 
-    /// Unsets the field
+    /// Unsets the cell at given coordinates
     pub fn unset(&mut self, row: u8, col: u8) {
         let index = col + row * Self::ROWS;
         self.fields[index as usize] = Value::Empty;
+    }
+
+    /// Returns the number of clues / set values
+    pub fn num_clues(&self) -> u8 {
+        self.fields.iter().filter(|&v| v.is_digit()).count() as u8
     }
 
     /// Naive version to check if Sudoku is solved

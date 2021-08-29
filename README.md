@@ -15,3 +15,5 @@ An okay-ish soduku program to experiment with algorithms & additional logical la
 * [Sudoku Solver](https://sudokuspoiler.azurewebsites.net/) - online
 * [Recursive Brute Force Solver](https://medium.com/@ekapope.v/learning-recursive-algorithm-with-sudoku-solver-in-python-345623de98ae)
 * [Sudoku Strategy Families](https://www.sudokuwiki.org/Strategy_Families)
+* [Sudopedia Terminology](https://www.sudopedia.org/wiki/Terminology)
+* [Solving Techniques](http://sudopedia.enjoysudoku.com/Solving_Technique.html)

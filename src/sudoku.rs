@@ -1,6 +1,6 @@
 use std::{convert::TryFrom, fmt::{self, Debug, Display}};
 
-use crate::parser::parse_sudoku;
+use crate::{parser::parse_sudoku, types::{BLOCKS, COLS, Pos, ROWS, Row}};
 
 #[derive(Debug)]
 pub enum GridError {
@@ -157,22 +157,29 @@ impl Sudoku {
     }
 
     /// Returns all fields for the given row
-    pub fn get_row(&self, row: u8) -> impl Iterator<Item = &Value> {
-        // refactor to access via indices
-        let index = (row * Self::ROWS) as usize;
-        self.fields.iter().skip(index).take(9).into_iter()
+    pub fn get_row(&self, row: u8) -> impl Iterator<Item = Value> + '_ {
+        let indices = &ROWS[row as usize];
+        indices
+            .iter()
+            .map(move |&index| self.fields[index as usize])
     }
 
     /// Returns all fields for the given column
-    pub fn get_col(&self, col: u8) -> impl Iterator<Item = &Value> {
-        // refactor to access via indices
-        self.fields.iter().skip(col as usize).step_by(9).into_iter()
+    pub fn get_col(&self, col: u8) -> impl Iterator<Item = Value> + '_ {
+        let indices = &COLS[col as usize];
+        indices
+            .iter()
+            .map(move |&index| self.fields[index as usize])
     }
 
     /// Returns all fields from the given block
-    pub fn get_block(&self, row: u8, col: u8) -> impl Iterator<Item = &Value> {
-        // get all block indices from given row / col
-        // Pos::new(row, col).block()
+    pub fn get_block(&self, row: u8, col: u8) -> impl Iterator<Item = Value> + '_ {
+        // let indices = Pos::new(row, col).block().indices();
+        let index = Pos::new(row, col).block().index();
+        let indices = &BLOCKS[index as usize];
+        indices
+            .iter()
+            .map(move |&index| self.fields[index as usize])
     }
 }
 

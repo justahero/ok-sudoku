@@ -1,6 +1,6 @@
 use crate::Sudoku;
 
-static BLOCKS: [[u8; 9]; 9] = [
+pub(crate) static BLOCKS: [[u8; 9]; 9] = [
     [00, 01, 02, 09, 10, 11, 18, 19, 20],
     [03, 04, 05, 12, 13, 14, 21, 22, 23],
     [06, 07, 08, 15, 16, 17, 23, 25, 26],
@@ -12,7 +12,7 @@ static BLOCKS: [[u8; 9]; 9] = [
     [60, 61, 62, 69, 70, 71, 78, 79, 80],
 ];
 
-static ROWS: [[u8; 9]; 9] = [
+pub(crate) static ROWS: [[u8; 9]; 9] = [
     [00, 01, 02, 03, 04, 05, 06, 07, 08],
     [09, 10, 11, 12, 13, 14, 15, 16, 17],
     [18, 19, 20, 21, 22, 23, 24, 25, 26],
@@ -24,7 +24,7 @@ static ROWS: [[u8; 9]; 9] = [
     [72, 73, 74, 75, 76, 77, 78, 79, 80],
 ];
 
-static COLS: [[u8; 9]; 9] = [
+pub(crate) static COLS: [[u8; 9]; 9] = [
     [00, 09, 18, 27, 36, 45, 54, 63, 72],
     [01, 10, 19, 28, 37, 46, 55, 64, 73],
     [02, 11, 20, 29, 38, 47, 56, 65, 74],
@@ -107,6 +107,10 @@ impl From<Index> for Pos {
 }
 
 impl Pos {
+    pub fn new(row: u8, col: u8) -> Self {
+        Self(row, col)
+    }
+
     pub fn block(&self) -> Block {
         Block::new(self.0 % Sudoku::BLOCK_SIZE + self.1 % Sudoku::BLOCK_SIZE)
     }
@@ -121,6 +125,11 @@ impl Block {
     #[inline(always)]
     pub fn indices(&self) -> &[u8; 9] {
         &BLOCKS[self.0 as usize]
+    }
+
+    #[inline(always)]
+    pub fn index(&self) -> u8 {
+        self.0
     }
 }
 

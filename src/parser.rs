@@ -5,7 +5,7 @@ use crate::sudoku::{GridError, Sudoku};
 parser! {
     grammar sudoku_parser() for str {
         rule empty() -> u8
-            = $(['-' | '.' ]) { 0 }
+            = $(['-' | '.' | '0' ]) { 0 }
 
         rule number() -> u8
             = n:$(['0'..='9']) { str::parse::<u8>(n).unwrap() }
@@ -16,7 +16,7 @@ parser! {
             = _ n:number() _ { n }
             / _ e:empty() _ { e }
 
-        pub(crate) rule numbers() -> Vec<u8>
+        rule numbers() -> Vec<u8>
             = n:field() * { n }
 
         pub(crate) rule parse() -> Sudoku
@@ -31,31 +31,39 @@ pub fn parse_sudoku(grid: &str) -> Result<Sudoku, GridError> {
 
 #[cfg(test)]
 mod test {
+    use crate::Sudoku;
     use crate::parser::parse_sudoku;
-    use crate::parser::sudoku_parser;
 
     #[test]
     fn test_parse_sudoku() {
-        let sudoku = r"
-            --- --- 984
-            4-- 8-- 25-
-            -8- -49 --3
-            9-6 157 8-2
-            --- --- -4-
-            --- -8- 196
-            -34 928 56-
-            6-2 -15 37-
-            --5 -6- ---
+        let input = r"
+            000 --- 984
+            4.. 8.. 25.
+            .8. .49 ..3
+            9.6 157 8.2
+            ... ... .4.
+            ... .8. 196
+            .34 928 56.
+            6.2 .15 37.
+            ..5 .6. ...
         ";
-        assert!(parse_sudoku(sudoku).is_ok());
-    }
+        let expected = vec![
+            0, 0, 0, 0, 0, 0, 9, 8, 4,
+            4, 0, 0, 8, 0, 0, 2, 5, 0,
+            0, 8, 0, 0, 4, 9, 0, 0, 3,
+            9, 0, 6, 1, 5, 7, 8, 0, 2,
+            0, 0, 0, 0, 0, 0, 0, 4, 0,
+            0, 0, 0, 0, 8, 0, 1, 9, 6,
+            0, 3, 4, 9, 2, 8, 5, 6, 0,
+            6, 0, 2, 0, 1, 5, 3, 7, 0,
+            0, 0, 5, 0, 6, 0, 0, 0, 0,
+        ];
+        let expected = Sudoku::new(expected).unwrap();
 
-    #[test]
-    fn test_parse_single_field() {
-        let numbers = sudoku_parser::numbers("123 -1- 1-2");
-        assert!(numbers.is_ok());
+        let result = parse_sudoku(input);
+        assert!(result.is_ok());
 
-        let numbers = numbers.unwrap();
-        assert_eq!(vec![1, 2, 3, 0, 1, 0, 1, 0, 2], numbers);
+        let actual = result.unwrap();
+        assert_eq!(expected, actual);
     }
 }

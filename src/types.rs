@@ -1,9 +1,11 @@
+use std::fmt::Display;
+
 use crate::Sudoku;
 
 pub(crate) static BLOCKS: [[u8; 9]; 9] = [
     [00, 01, 02, 09, 10, 11, 18, 19, 20],
     [03, 04, 05, 12, 13, 14, 21, 22, 23],
-    [06, 07, 08, 15, 16, 17, 23, 25, 26],
+    [06, 07, 08, 15, 16, 17, 24, 25, 26],
     [27, 28, 29, 36, 37, 38, 45, 46, 47],
     [30, 31, 32, 39, 40, 41, 48, 49, 50],
     [33, 34, 35, 42, 43, 44, 51, 52, 53],
@@ -79,6 +81,18 @@ impl Index {
     pub fn pos(&self) -> Pos {
         Pos(self.row().0, self.col().0)
     }
+}
+
+impl From<Index> for Pos {
+    fn from(index: Index) -> Self {
+        index.pos()
+    }
+}
+
+impl Pos {
+    pub fn new(row: u8, col: u8) -> Self {
+        Self(row, col)
+    }
 
     /// Returns the associated block index.
     ///
@@ -94,62 +108,42 @@ impl Index {
     ///   6 6 6 7 7 7 8 8 8
     ///   6 6 6 7 7 7 8 8 8
     ///
-    #[inline(always)]
-    pub fn block(&self) -> Block {
-        self.pos().block()
+    pub fn block(&self) -> u8 {
+        let row = (self.0 / Sudoku::BLOCK_SIZE) % Sudoku::BLOCK_SIZE;
+        let col = self.1 / Sudoku::BLOCK_SIZE;
+        row * Sudoku::BLOCK_SIZE + col
     }
 }
 
-impl From<Index> for Pos {
-    fn from(index: Index) -> Self {
-        index.pos()
+impl Display for Pos {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}, {})", self.0, self.1)
     }
 }
 
-impl Pos {
-    pub fn new(row: u8, col: u8) -> Self {
-        Self(row, col)
-    }
+#[cfg(test)]
+mod tests {
+    use crate::{Sudoku, types::Pos};
 
-    pub fn block(&self) -> Block {
-        Block::new(self.0 % Sudoku::BLOCK_SIZE + self.1 % Sudoku::BLOCK_SIZE)
-    }
-}
+    #[test]
+    fn test_pos_block_indices() {
+        let expected_blocks: Vec<u8> = vec![
+            0, 0, 0, 1, 1, 1, 2, 2, 2,
+            0, 0, 0, 1, 1, 1, 2, 2, 2,
+            0, 0, 0, 1, 1, 1, 2, 2, 2,
+            3, 3, 3, 4, 4, 4, 5, 5, 5,
+            3, 3, 3, 4, 4, 4, 5, 5, 5,
+            3, 3, 3, 4, 4, 4, 5, 5, 5,
+            6, 6, 6, 7, 7, 7, 8, 8, 8,
+            6, 6, 6, 7, 7, 7, 8, 8, 8,
+            6, 6, 6, 7, 7, 7, 8, 8, 8,
+        ];
 
-impl Block {
-    pub fn new(block: u8) -> Self {
-        Self(block)
-    }
-
-    /// Returns all indices for this block
-    #[inline(always)]
-    pub fn indices(&self) -> &[u8; 9] {
-        &BLOCKS[self.0 as usize]
-    }
-
-    #[inline(always)]
-    pub fn index(&self) -> u8 {
-        self.0
-    }
-}
-
-impl Row {
-    pub fn new(row: u8) -> Self {
-        Self(row)
-    }
-
-    /// Returns all indices for this row
-    pub fn indices(&self) -> &[u8; 9] {
-        &ROWS[self.0 as usize]
-    }
-}
-
-impl Col {
-    pub fn new(col: u8) -> Self {
-        Self(col)
-    }
-
-    pub fn indices(&self) -> &[u8; 9] {
-        &COLS[self.0 as usize]
+        for row in 0..Sudoku::ROWS {
+            for col in 0..Sudoku::COLS {
+                let index = row * Sudoku::ROWS + col;
+                assert_eq!(expected_blocks[index as usize], Pos::new(row, col).block());
+            }
+        }
     }
 }

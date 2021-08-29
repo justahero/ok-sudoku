@@ -20,10 +20,10 @@ impl Display for GridError {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Value {
     /// There is no value set, initial value of a field
-    Unset,
+    Empty,
     /// Set to a number
     Number(u8),
 }
@@ -31,10 +31,19 @@ pub enum Value {
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Value::Unset => write!(f, ".")?,
+            Value::Empty => write!(f, ".")?,
             Value::Number(n) => write!(f, "{}", n)?,
         }
         Ok(())
+    }
+}
+
+impl From<Value> for u8 {
+    fn from(v: Value) -> Self {
+        match v {
+            Value::Number(v) => v,
+            Value::Empty => 0,
+        }
     }
 }
 
@@ -42,28 +51,34 @@ impl From<&Value> for u8 {
     fn from(v: &Value) -> Self {
         match v {
             Value::Number(v) => *v,
-            Value::Unset => 0,
+            Value::Empty => 0,
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Sudoku {
     /// The list of all fields
     fields: Vec<Value>,
 }
 
+impl Debug for Sudoku {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for y in 0..self.num_rows() {
-            for x in 0..self.num_cols() {
-                match (y, x) {
+        for row in 0..self.num_rows() {
+            for col in 0..self.num_cols() {
+                match (row, col) {
                     (_, 3) | (_, 6) => write!(f, " ")?,
-                    (3, 0) | (6, 0) => write!(f, "\n\n")?,
+                    (3, 0) | (6, 0) => write!(f, "\n")?,
                     (_, 0)          => write!(f, "\n")?,
                     _ => {}
                 }
-                write!(f, "{}", self.get(x, y).unwrap())?;
+                write!(f, "{}", self.get(row, col).unwrap())?;
             }
         }
         Ok(())
@@ -102,6 +117,18 @@ impl fmt::Display for Sudoku {
 ///      Rows
 /// ```
 ///
+/// The Block grid looks as follows:
+///
+/// ```text
+///       ┏━━━━┯━━━━┯━━━━┓
+///       ┃  0 ┃  1 ┃  2 ┃
+///       ┠━━━━┼━━━━┼━━━━┨
+///       ┃  3 ┃  4 ┃  5 ┃
+///       ┠━━━━┼━━━━┼━━━━┨
+///       ┃  6 ┃  7 ┃  8 ┃
+///       ┗━━━━┻━━━━┻━━━━┛
+/// ```
+///
 impl Sudoku {
     pub const BLOCK_SIZE: u8 = 3;
     pub const ROWS: u8 = 9;
@@ -119,7 +146,7 @@ impl Sudoku {
             .into_iter()
             .map(|n| match n {
                 1..=9 => Ok(Value::Number(n)),
-                0 => Ok(Value::Unset),
+                0 => Ok(Value::Empty),
                 v => Err(GridError::Invalid(format!("Invalid value '{}' found", v))),
             })
             .collect();
@@ -145,15 +172,21 @@ impl Sudoku {
         self.fields.get(index as usize)
     }
 
-    pub fn set(&mut self, col: u8, row: u8, val: Value) {
+    pub fn set(&mut self, row: u8, col: u8, val: Value) {
         let index = col + row * self.num_rows();
         self.fields[index as usize] = val;
+    }
+
+    /// Unsets the field
+    pub fn unset(&mut self, row: u8, col: u8) {
+        let index = col + row * self.num_rows();
+        self.fields[index as usize] = Value::Empty;
     }
 
     /// Naive version to check if Sudoku is solved
     /// **Note** ignores any checks that each line, row and block contains of digits 1..9
     pub fn is_solved(&self) -> bool {
-        self.fields.iter().all(|f| *f != Value::Unset )
+        self.fields.iter().all(|f| *f != Value::Empty )
     }
 
     /// Returns all fields for the given row
@@ -174,8 +207,7 @@ impl Sudoku {
 
     /// Returns all fields from the given block
     pub fn get_block(&self, row: u8, col: u8) -> impl Iterator<Item = Value> + '_ {
-        // let indices = Pos::new(row, col).block().indices();
-        let index = Pos::new(row, col).block().index();
+        let index = Pos::new(row, col).block();
         let indices = &BLOCKS[index as usize];
         indices
             .iter()

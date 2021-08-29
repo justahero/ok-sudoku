@@ -34,7 +34,6 @@ impl Solver {
     }
 
     fn solve_sudoku(&mut self) -> bool {
-        println!("\nSTEP: {}", self.sudoku);
         for row in 0..self.sudoku.num_rows() {
             for col in 0..self.sudoku.num_cols() {
                 if self.sudoku.get(row, col) == Some(&Value::Empty) {
@@ -116,6 +115,10 @@ mod tests {
 
     #[test]
     fn fails_to_solve_invalid_sudoku() {
+        // unsolvable square from: http://sudopedia.enjoysudoku.com/Invalid_Test_Cases.html
+        let sudoku = "..9.287..8.6..4..5..3.....46.........2.71345.........23.....5..9..4..8.7..125.3..";
 
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
+        assert!(Solver::solve(&sudoku).is_err());
     }
 }

@@ -103,43 +103,11 @@ impl fmt::Display for Sudoku {
 /// ```
 ///
 impl Sudoku {
-    const BLOCK_SIZE: u8 = 3;
-    const ROWS: u8 = 9;
-    const COLS: u8 = 9;
-    const NUM_FIELDS: u32 = 81;
+    pub const BLOCK_SIZE: u8 = 3;
+    pub const ROWS: u8 = 9;
+    pub const COLS: u8 = 9;
+    pub const NUM_FIELDS: u32 = 81;
 
-    /// Returns the block index.
-    ///
-    /// Block indices map from the grid as follows
-    ///
-    ///   0 0 0 1 1 1 2 2 2
-    ///   0 0 0 1 1 1 2 2 2
-    ///   0 0 0 1 1 1 2 2 2
-    ///   3 3 3 4 4 4 5 5 5
-    ///   3 3 3 4 4 4 5 5 5
-    ///   3 3 3 4 4 4 5 5 5
-    ///   6 6 6 7 7 7 8 8 8
-    ///   6 6 6 7 7 7 8 8 8
-    ///   6 6 6 7 7 7 8 8 8
-    ///
-    #[inline(always)]
-    pub(crate) fn block(index: u8) -> u8 {
-        Self::row(index) % Self::BLOCK_SIZE + Self::col(index) % Self::BLOCK_SIZE
-    }
-
-    /// Returns the row from the given index
-    #[inline(always)]
-    pub(crate) fn row(index: u8) -> u8 {
-        index / Self::ROWS
-    }
-
-    #[inline(always)]
-    pub(crate) fn col(index: u8) -> u8 {
-        index % Self::COLS
-    }
-}
-
-impl Sudoku {
     /// Create a new grid from a list of values
     pub fn new(fields: Vec<u8>) -> Result<Self, GridError> {
         if fields.len() != Self::NUM_FIELDS as usize {
@@ -189,16 +157,23 @@ impl Sudoku {
     }
 
     /// Returns all fields for the given row
-    pub fn get_row(&self, row: u8) -> impl Iterator<Item = &Value> + '_ {
+    pub fn get_row(&self, row: u8) -> impl Iterator<Item = &Value> {
+        // refactor to access via indices
         let index = (row * Self::ROWS) as usize;
         self.fields.iter().skip(index).take(9).into_iter()
     }
 
-//    /// Returns the row
-//    pub fn get_row(&self, row: u32) -> impl Iterator<Item = Cell> {
-//        let index = row * self.num_rows();
-//        (index..index+9).map(Cell::new)
-//    }
+    /// Returns all fields for the given column
+    pub fn get_col(&self, col: u8) -> impl Iterator<Item = &Value> {
+        // refactor to access via indices
+        self.fields.iter().skip(col as usize).step_by(9).into_iter()
+    }
+
+    /// Returns all fields from the given block
+    pub fn get_block(&self, row: u8, col: u8) -> impl Iterator<Item = &Value> {
+        // get all block indices from given row / col
+        // Pos::new(row, col).block()
+    }
 }
 
 /// Parses the Grid from a layout given as a string.
@@ -275,6 +250,14 @@ mod tests {
         let sudoku = Sudoku::new(SUDOKU.to_vec()).unwrap();
         let actual = sudoku.get_row(6).map(|v| v.into()).collect::<Vec<_>>();
         let expected = vec![0u8, 6, 0, 0, 0, 0, 2, 8, 0];
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_get_col_values() {
+        let sudoku = Sudoku::new(SUDOKU.to_vec()).unwrap();
+        let actual = sudoku.get_col(5).map(|v| v.into()).collect::<Vec<_>>();
+        let expected = vec![0u8, 5, 0, 0, 3, 0, 0, 9, 0];
         assert_eq!(expected, actual);
     }
 }

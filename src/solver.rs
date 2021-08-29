@@ -26,13 +26,12 @@ impl Solver {
     }
 
     fn solve_sudoku(mut sudoku: Sudoku) -> Result<Sudoku, SolverError> {
-        for y in 0..sudoku.num_rows() {
-            for x in 0..sudoku.num_cols() {
-                if sudoku.get(x, y) == Some(&Value::Unset) {
+        for row in 0..sudoku.num_rows() {
+            for col in 0..sudoku.num_cols() {
+                if sudoku.get(row, col) == Some(&Value::Unset) {
                     for value in 1..=9 {
-                        let v = Value::Number(value);
-                        if Self::possible(&sudoku, y, x, &v) {
-                            sudoku.set(x, y, v);
+                        if Self::possible(&sudoku, row, col, value) {
+                            sudoku.set(row, col, Value::Number(value));
                         }
                     }
                 }
@@ -41,7 +40,8 @@ impl Solver {
         Ok(sudoku)
     }
 
-    fn possible(sudoku: &Sudoku, y: u32, x: u32, value: &Value) -> bool {
+    /// Slow check if the given value for field x, y can be set
+    fn possible(sudoku: &Sudoku, row: u32, col: u32, value: u8) -> bool {
         false
     }
 }

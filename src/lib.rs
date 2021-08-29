@@ -1,9 +1,11 @@
 mod algorithm;
-mod sudoku;
+mod cell;
 mod layer;
 mod parser;
 mod solver;
+mod sudoku;
 
-pub use sudoku::Sudoku;
+pub use cell::*;
 pub use layer::Layer;
 pub use solver::*;
+pub use sudoku::Sudoku;

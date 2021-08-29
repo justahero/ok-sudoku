@@ -61,11 +61,58 @@ impl fmt::Display for Sudoku {
     }
 }
 
+/// The main Sudoku struct
+///
+/// The grid is divided into the following rows, columns & indices
+///
+/// ```
+///                               Blocks
+///                   0              1              2
+///             ┏━━━━━━━━━━━┓  ┏━━━━━━━━━━━┓  ┏━━━━━━━━━━━┓
+///
+///              0    1    2    3    4    5    6    7    8   Columns
+///           ┏━━━━┯━━━━┯━━━━┳━━━━┯━━━━┯━━━━┳━━━━┯━━━━┯━━━━┓
+///    ┏   0  ┃  0 ┃  1 ┃  2 ┃  3 ┃  4 ┃  5 ┃  6 ┃  7 ┃  8 ┃
+///    ┃      ┠────┼────┼────╂────┼────┼────╂────┼────┼────┨
+///  0 ┨   1  ┃  9 ┃ 10 ┃ 11 ┃ 12 ┃ 13 ┃ 14 ┃ 15 ┃ 16 ┃ 17 ┃
+///    ┃      ┠────┼────┼────╂────┼────┼────╂────┼────┼────┨
+///    ┗   2  ┃ 18 ┃ 19 ┃ 20 ┃ 21 ┃ 22 ┃ 23 ┃ 24 ┃ 25 ┃ 26 ┃
+///           ┠────┼────┼────╂────┼────┼────╂────┼────┼────┨
+///    ┏   3  ┃ 27 ┃ 28 ┃ 29 ┃ 30 ┃ 31 ┃ 32 ┃ 33 ┃ 34 ┃ 35 ┃
+///    ┃      ┠────┼────┼────╂────┼────┼────╂────┼────┼────┨
+///  1 ┨   4  ┃ 36 ┃ 37 ┃ 38 ┃ 39 ┃ 40 ┃ 41 ┃ 42 ┃ 43 ┃ 44 ┃
+///    ┃      ┠────┼────┼────╂────┼────┼────╂────┼────┼────┨
+///    ┗   5  ┃ 45 ┃ 46 ┃ 47 ┃ 48 ┃ 49 ┃ 50 ┃ 51 ┃ 52 ┃ 53 ┃
+///           ┠────┼────┼────╂────┼────┼────╂────┼────┼────┨
+///    ┏   6  ┃ 54 ┃ 55 ┃ 56 ┃ 57 ┃ 58 ┃ 59 ┃ 60 ┃ 61 ┃ 62 ┃
+///    ┃      ┠────┼────┼────╂────┼────┼────╂────┼────┼────┨
+///  2 ┨   7  ┃ 63 ┃ 64 ┃ 65 ┃ 66 ┃ 67 ┃ 68 ┃ 69 ┃ 70 ┃ 71 ┃
+///    ┃      ┠────┼────┼────╂────┼────┼────╂────┼────┼────┨
+///    ┗   8  ┃ 72 ┃ 73 ┃ 74 ┃ 75 ┃ 76 ┃ 77 ┃ 78 ┃ 79 ┃ 80 ┃
+///           ┗━━━━┷━━━━┷━━━━┻━━━━┷━━━━┷━━━━┻━━━━┷━━━━┷━━━━┛
+///      Rows
+/// ```
+///
 impl Sudoku {
+    const BLOCK_SIZE: u8 = 3;
     const ROWS: u32 = 9;
     const COLS: u32 = 9;
     const NUM_FIELDS: u32 = 81;
 
+    /// Returns the block index from given row, col
+    #[inline(always)]
+    pub(crate) fn block(row: u8, col: u8) -> u8 {
+        row % Self::BLOCK_SIZE + col % Self::BLOCK_SIZE
+    }
+
+    /// Returns the row from the given index
+    #[inline(always)]
+    pub(crate) fn row(index: u8) -> u8 {
+        0
+    }
+}
+
+impl Sudoku {
     /// Create a new grid from a list of values
     pub fn new(fields: Vec<u8>) -> Result<Self, GridError> {
         if fields.len() != Self::NUM_FIELDS as usize {
@@ -98,13 +145,13 @@ impl Sudoku {
         Self::COLS
     }
 
-    pub fn get(&self, x: u32, y: u32) -> Option<&Value> {
-        let index = x + y * self.num_rows();
+    pub fn get(&self, row: u32, col: u32) -> Option<&Value> {
+        let index = col + row * self.num_rows();
         self.fields.get(index as usize)
     }
 
-    pub fn set(&mut self, x: u32, y: u32, val: Value) {
-        let index = x + y * self.num_rows();
+    pub fn set(&mut self, col: u32, row: u32, val: Value) {
+        let index = col + row * self.num_rows();
         self.fields[index as usize] = val;
     }
 
@@ -113,6 +160,12 @@ impl Sudoku {
     pub fn is_solved(&self) -> bool {
         self.fields.iter().all(|f| *f != Value::Unset )
     }
+
+//    /// Returns the row
+//    pub fn get_row(&self, row: u32) -> impl Iterator<Item = Cell> {
+//        let index = row * self.num_rows();
+//        (index..index+9).map(Cell::new)
+//    }
 }
 
 /// Parses the Grid from a layout given as a string.

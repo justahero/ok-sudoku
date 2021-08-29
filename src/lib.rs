@@ -1,5 +1,4 @@
 mod algorithm;
-mod cell;
 mod layer;
 mod parser;
 pub mod solver;

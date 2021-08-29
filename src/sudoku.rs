@@ -1,6 +1,6 @@
 use std::{convert::TryFrom, fmt::{self, Debug, Display}};
 
-use crate::{parser::parse_sudoku, types::{BLOCKS, COLS, Pos, ROWS, Row}};
+use crate::{parser::parse_sudoku, types::{BLOCKS, COLS, HOUSES, Pos, ROWS}};
 
 #[derive(Debug)]
 pub enum GridError {
@@ -209,6 +209,15 @@ impl Sudoku {
     pub fn get_block(&self, row: u8, col: u8) -> impl Iterator<Item = Value> + '_ {
         let index = Pos::new(row, col).block();
         let indices = &BLOCKS[index as usize];
+        indices
+            .iter()
+            .map(move |&index| self.fields[index as usize])
+    }
+
+    /// Returns the house, all fields from same row, col and block
+    pub fn get_house(&self, row: u8, col: u8) -> impl Iterator<Item = Value> + '_ {
+        let index = col + row * Self::ROWS;
+        let indices = &HOUSES[index as usize];
         indices
             .iter()
             .map(move |&index| self.fields[index as usize])

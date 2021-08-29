@@ -22,18 +22,13 @@ impl fmt::Display for SolverError {
     }
 }
 
-/// Holds the found solutions after solving the sudoku
 #[derive(Debug)]
-pub struct Solver {
-    /// The list of found solutions
-    solutions: Vec<Sudoku>,
-}
+pub struct Solver {}
 
 impl Solver {
     /// Tries to find a single unique solution for the given Sudoku
-    pub fn solve(sudoku: &Sudoku) -> Result<Sudoku, SolverError> {
-        let solutions = Self::solve_sudoku(&mut sudoku.clone());
-
+    pub fn find_unique(sudoku: &Sudoku) -> Result<Sudoku, SolverError> {
+        let solutions = Self::find_all(&mut sudoku.clone());
         match solutions.len() {
             1 => Ok(solutions[0].clone()),
             0 => Err(SolverError::Unsolvable),
@@ -43,10 +38,8 @@ impl Solver {
 
     /// Useful to find all possible solutions of a given Sudoku
     /// **NOTE** can take a while to run.
-    pub fn find_all(sudoku: &Sudoku) -> Self {
-        let solutions = Self::solve_sudoku(&mut sudoku.clone());
-
-        Self { solutions }
+    pub fn find_all(sudoku: &Sudoku) -> Vec<Sudoku> {
+        Self::solve_sudoku(&mut sudoku.clone())
     }
 
     /// Brute Force Solver using recursion, trying to find all solutions
@@ -77,26 +70,7 @@ impl Solver {
 
     /// Slow check if the given value for field row, col can be set
     fn possible(sudoku: &Sudoku, row: u8, col: u8, value: u8) -> bool {
-        if let Some(_) = sudoku.get_row(row).find(|&v| Value::Number(value) == v) {
-            return false;
-        }
-
-        if let Some(_) = sudoku.get_col(col).find(|&v| Value::Number(value) == v) {
-            return false;
-        }
-
-        if let Some(_) = sudoku
-            .get_block(row, col)
-            .find(|&v| Value::Number(value) == v)
-        {
-            return false;
-        }
-
-        true
-    }
-
-    pub fn solutions(&self) -> &[Sudoku] {
-        &self.solutions
+        sudoku.get_house(row, col).find(|&v| Value::Number(value) == v).is_none()
     }
 }
 
@@ -135,7 +109,7 @@ mod tests {
 
         let expected = Sudoku::new(expected).unwrap();
         let sudoku = Sudoku::try_from(sudoku).unwrap();
-        let result = Solver::solve(&sudoku);
+        let result = Solver::find_unique(&sudoku);
 
         assert!(result.is_ok());
         let actual = result.unwrap();
@@ -149,7 +123,10 @@ mod tests {
             "..9.287..8.6..4..5..3.....46.........2.71345.........23.....5..9..4..8.7..125.3..";
 
         let sudoku = Sudoku::try_from(sudoku).unwrap();
-        assert_eq!(SolverError::Unsolvable, Solver::solve(&sudoku).unwrap_err());
+        assert_eq!(
+            SolverError::Unsolvable,
+            Solver::find_unique(&sudoku).unwrap_err()
+        );
     }
 
     #[test]
@@ -159,8 +136,8 @@ mod tests {
             ".39...12....9.7...8..4.1..6.42...79...........91...54.5..1.9..3...8.5....14...87.";
         let sudoku = Sudoku::try_from(sudoku).unwrap();
 
-        let solver = Solver::find_all(&sudoku);
-        assert_eq!(2, solver.solutions().len());
+        let solutions = Solver::find_all(&sudoku);
+        assert_eq!(2, solutions.len());
 
         let expected = vec![
             Sudoku::try_from(
@@ -175,11 +152,8 @@ mod tests {
 
         assert_eq!(
             SolverError::TooManySolutions(2),
-            Solver::solve(&sudoku).unwrap_err()
+            Solver::find_unique(&sudoku).unwrap_err()
         );
-        assert!(solver
-            .solutions()
-            .iter()
-            .all(|solution| expected.contains(solution)));
+        assert!(solutions.iter().all(|solution| expected.contains(solution)));
     }
 }

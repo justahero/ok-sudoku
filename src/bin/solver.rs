@@ -11,13 +11,15 @@ fn main() {
         .arg(Arg::with_name("grid")
             .short("g")
             .long("grid")
+            .value_name("STRING")
+            .takes_value(true)
             .help("The 9x9 grid as a single contiguous string"))
         .get_matches();
 
     if let Some(grid) = matches.value_of("grid") {
         let grid = Sudoku::try_from(grid).unwrap();
-        match Solver::solve(&grid) {
-            Ok(result) => println!("Solved: {}", grid),
+        match Solver::find_unique(&grid) {
+            Ok(result) => println!("Solved: {}", result),
             Err(err) => println!("Failed to solve grid: {}", err),
         }
     }

@@ -8,8 +8,6 @@ use std::num::NonZeroU8;
 use bitvec::prelude::*;
 pub use strategy_solver::StrategySolver;
 
-use crate::types::Index;
-
 use self::{grid::Grid, steps::Steps};
 
 #[derive(Debug, Clone)]
@@ -27,8 +25,8 @@ impl Candidates {
     }
 
     /// Returns true if candidate is set
-    pub fn is_set(candidate: u8) -> bool {
-        false
+    pub fn is_set(&self, candidate: u8) -> bool {
+        self.0.get((candidate - 1) as usize).is_some()
     }
 
     /// Returns an iterator over all candidates
@@ -70,7 +68,7 @@ impl Digit {
 #[derive(Debug, Clone)]
 pub struct Cell {
     /// The index on the board
-    index: Index,
+    index: u8,
     /// The state of the cell, a number or candidates
     state: CellState,
 }
@@ -79,7 +77,7 @@ impl Cell {
     /// Creates a Cell with a Digit
     pub fn new_digit(index: u8, digit: u8) -> Self {
         Cell {
-            index: Index::new(index),
+            index,
             state: CellState::Number(Digit::new(digit)),
         }
     }
@@ -87,7 +85,7 @@ impl Cell {
     /// Creates a Cell with empty Candidates list
     pub fn new_empty(index: u8) -> Self {
         Cell {
-            index: Index::new(index),
+            index,
             state: CellState::Candidate(Candidates::new()),
         }
     }

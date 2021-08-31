@@ -148,6 +148,11 @@ impl Index {
         Index(index)
     }
 
+    /// Returns the index
+    pub fn index(&self) -> u8 {
+        self.0
+    }
+
     /// Returns the row on the board
     #[inline(always)]
     pub fn row(&self) -> Row {

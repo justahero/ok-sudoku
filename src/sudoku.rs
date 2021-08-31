@@ -184,11 +184,6 @@ impl Sudoku {
         self.fields[index as usize] = Value::Empty;
     }
 
-    /// Returns the number of clues / set values
-    pub fn num_clues(&self) -> u8 {
-        self.fields.iter().filter(|&v| v.is_digit()).count() as u8
-    }
-
     /// Naive version to check if Sudoku is solved
     /// **Note** ignores any checks that each line, row and block contains of digits 1..9
     pub fn is_solved(&self) -> bool {

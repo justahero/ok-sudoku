@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::{Sudoku, Value, sudoku::GridError, types::{BLOCKS, COLS, HOUSES, Pos, ROWS}};
 
 use super::{Cell, CellState, Digit};
@@ -26,16 +28,25 @@ impl Grid {
         grid
     }
 
-    /// Determines and initializes all empty fields with candidates
+    /// Initializes all empty fields with candidates.
     ///
     /// **Note** this will not check or validate the candidates, e.g. empty fields
     ///
     fn init_candidates(&mut self) {
-        self.cells.iter_mut().for_each(|cell| {
-            if let Some(candidates) = cell.candidates_mut() {
-
+        for row in 0..9 {
+            for col in 0..9 {
+                let index = col + row * Sudoku::ROWS;
+                // TODO make this more pleasant, bitwise OR ing
+                // ?
+                if self.cells[index as usize].is_empty() {
+                    let _neighbors = self
+                        .get_house(index)
+                        .map(|neighbor| neighbor.value())
+                        .filter(|v| *v == 0)
+                        .collect::<HashSet<u8>>();
+                }
             }
-        });
+        }
     }
 
     /// Returns an iterator over all cells
@@ -87,8 +98,7 @@ impl Grid {
     }
 
     /// Returns the house, all fields from same row, col and block
-    pub fn get_house<'a>(&'a self, row: u8, col: u8) -> impl Iterator<Item = &Cell> + 'a {
-        let index = col + row * Sudoku::ROWS;
+    pub fn get_house<'a>(&'a self, index: u8) -> impl Iterator<Item = &Cell> + 'a {
         let indices = &HOUSES[index as usize];
         indices
             .iter()
@@ -119,8 +129,23 @@ impl From<&Sudoku> for Grid {
 
 #[cfg(test)]
 mod tests {
+    use crate::{Sudoku, strategy::grid::Grid};
+
     #[test]
     fn test_init_candidates() {
+        let sudoku: Vec<u8> = vec![
+            8, 0, 0, 7, 3, 9, 0, 0, 6,
+            3, 7, 0, 4, 6, 5, 0, 0, 0,
+            0, 4, 0, 1, 8, 2, 0, 0, 9,
+            0, 0, 0, 6, 0, 0, 0, 4, 0,
+            0, 5, 4, 3, 0, 0, 6, 1, 0,
+            0, 6, 0, 5, 0, 0, 0, 0, 0,
+            4, 0, 0, 8, 5, 3, 0, 7, 0,
+            0, 0, 0, 2, 7, 1, 0, 6, 4,
+            1, 0, 0, 9, 4, 0, 0, 0, 2,
+        ];
 
+        let grid: Grid = Sudoku::new(sudoku).unwrap().into();
+        // grid.get(0, 1).
     }
 }

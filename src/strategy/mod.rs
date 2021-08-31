@@ -27,7 +27,7 @@ impl Candidates {
     }
 
     /// Returns true if candidate is set
-    pub fn is_set(_index: u8) -> bool {
+    pub fn is_set(candidate: u8) -> bool {
         false
     }
 
@@ -54,6 +54,11 @@ impl Digit {
 
     pub fn new_unchecked(digit: u8) -> Option<Self> {
         NonZeroU8::new(digit).map(Self)
+    }
+
+    /// Returns the digit value
+    pub fn value(&self) -> u8 {
+        self.0.get()
     }
 
     pub fn index(&self) -> u8 {
@@ -87,6 +92,21 @@ impl Cell {
         }
     }
 
+    /// Returns true if the cell is a digit
+    pub fn is_digit(&self) -> bool {
+        self.state.is_digit()
+    }
+
+    /// Returns true if the cell does not contain a value
+    pub fn is_empty(&self) -> bool {
+        self.state.is_empty()
+    }
+
+    /// Returns the digit value of the cell, either 1-9 or 0 if unset
+    pub fn value(&self) -> u8 {
+        self.state.value()
+    }
+
     /// Returns the list of candidates
     pub fn candidates(&self) -> Option<&Candidates> {
         self.state.candidates()
@@ -107,6 +127,14 @@ pub enum CellState {
 }
 
 impl CellState {
+    /// Returns the digit value of the cell, either 1-9 or 0 if unset
+    pub fn value(&self) -> u8 {
+        match self {
+            CellState::Candidate(_) => 0,
+            CellState::Number(digit) => digit.value(),
+        }
+    }
+
     /// Returns the list of candidates if available
     pub fn candidates(&self) -> Option<&Candidates> {
         match self {
@@ -120,6 +148,22 @@ impl CellState {
         match self {
             CellState::Candidate(candidates) => Some(candidates),
             _=> None,
+        }
+    }
+
+    /// Returns true if the state is valid digit
+    pub fn is_digit(&self) -> bool {
+        match self {
+            CellState::Number(_) => true,
+            CellState::Candidate(_) => false,
+        }
+    }
+
+    /// Returns true if state does not contain a digit
+    pub fn is_empty(&self) -> bool {
+        match self {
+            CellState::Number(_) => false,
+            CellState::Candidate(_) => true,
         }
     }
 }

@@ -67,7 +67,7 @@ impl Value {
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct Sudoku {
-    /// The list of all fields
+    /// The list of all initial fields
     fields: Vec<Value>,
 }
 
@@ -227,6 +227,14 @@ impl Sudoku {
         indices
             .iter()
             .map(move |&index| self.fields[index as usize])
+    }
+
+    /// Returns the list of all field values with index
+    pub fn iter(&self) -> impl Iterator<Item = (u8, Value)> + '_ {
+        self.fields
+            .iter()
+            .enumerate()
+            .map(move |(index, value)| (index as u8, value.clone()))
     }
 }
 

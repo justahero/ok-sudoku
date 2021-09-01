@@ -5,40 +5,49 @@ mod strategy_solver;
 
 use std::num::NonZeroU8;
 
-use bitvec::prelude::*;
 pub use strategy_solver::StrategySolver;
 
 use self::{grid::Grid, steps::Steps};
 
 #[derive(Debug, Clone)]
-pub struct Candidates(BitArray);
+pub struct Candidates(u16);
 
 impl Candidates {
     pub fn new() -> Candidates {
-        Candidates(bitarr![0; 9])
+        Candidates(0)
     }
 
     /// Sets the given candidate
     pub fn set(&mut self, candidate: u8) {
-        let digit = Digit::new(candidate);
-        self.0.set(digit.index() as usize, true);
+        self.0 |= 1 << candidate;
     }
 
     /// Returns true if candidate is set
     pub fn is_set(&self, candidate: u8) -> bool {
-        self.0.get((candidate - 1) as usize).is_some()
+        // self.0.get((candidate - 1) as usize).is_some()
+        self.0 & (1 << candidate) > 0
+    }
+
+    /// Returns the inner bits
+    pub fn as_bits(&self) -> &u16 {
+        &self.0
     }
 
     /// Returns an iterator over all candidates
     pub fn iter(&self) -> impl Iterator<Item = u8> + '_ {
-        self.0.iter_ones().map(|v| v as u8 + 1)
+        (1u8..=9)
+            .into_iter()
+            .filter(move |&candidate| self.is_set(candidate))
+            .map(|candidate| candidate)
     }
 
     /// Returns the number of set candidates
-    pub fn count(&self) -> usize {
-        self.0.count_ones()
+    pub fn count(&self) -> u32 {
+        self.0.count_ones() as u32
     }
 }
+
+// TODO add impls for '&', '|', []: to bool etc that make sense
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
 pub struct Digit(NonZeroU8);

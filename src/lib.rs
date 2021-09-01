@@ -7,4 +7,4 @@ mod types;
 
 pub use crate::strategy::StrategySolver;
 pub use crate::solver::Solver;
-pub use crate::sudoku::{Sudoku, Value};
+pub use crate::sudoku::Sudoku;

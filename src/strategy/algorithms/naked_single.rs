@@ -1,4 +1,4 @@
-use crate::{strategy::{Strategy, grid::Grid, steps::Steps}};
+use crate::{Sudoku, strategy::{Strategy, steps::Steps}};
 
 pub struct NakedSingle {
     // TODO?
@@ -11,7 +11,7 @@ impl NakedSingle {
 }
 
 impl Strategy for NakedSingle {
-    fn find(&self, _sudoku: &Grid) -> Option<Steps> {
+    fn find(&self, _sudoku: &Sudoku) -> Option<Steps> {
         // TODO maybe pass in list of all Cells (digits, canddiates) here as well?
         None
     }

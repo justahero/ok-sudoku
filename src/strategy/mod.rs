@@ -1,5 +1,4 @@
 mod algorithms;
-mod grid;
 mod steps;
 mod strategy_solver;
 
@@ -8,9 +7,11 @@ use std::collections::HashSet;
 use bit_vec::BitVec;
 pub use strategy_solver::StrategySolver;
 
-use self::{grid::Grid, steps::Steps};
+use crate::Sudoku;
 
-#[derive(Debug, Clone)]
+use self::steps::Steps;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Candidates(BitVec);
 
 impl Candidates {
@@ -67,12 +68,10 @@ impl From<&HashSet<u8>> for Candidates {
     }
 }
 
-// TODO add impls for '&', '|', []: to bool etc that make sense
-
 /// A Cell represents the content of a single field on the grid
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Cell {
-    /// The index on the board
+    /// The index on the board, TODO check if this is really need, merge with CellState?
     index: u8,
     /// The state of the cell, a number or candidates
     state: CellState,
@@ -105,6 +104,16 @@ impl Cell {
         self.state.is_empty()
     }
 
+    /// Unsets the cell to an empty one
+    pub fn unset(&mut self) {
+        self.state = CellState::Candidates(Candidates::new())
+    }
+
+    /// Sets the digit of this cell
+    pub fn set_digit(&mut self, digit: u8) {
+        self.state = CellState::Number(digit);
+    }
+
     /// Returns the digit value of the cell, either 1-9 or 0 if unset
     pub fn digit(&self) -> u8 {
         self.state.digit()
@@ -121,7 +130,7 @@ impl Cell {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CellState {
     /// A specific set number
     Number(u8),
@@ -166,7 +175,7 @@ impl CellState {
 /// A `Strategy` is a distinct way to apply logic to determine
 /// the next digit.
 pub trait Strategy {
-    fn find(&self, sudoku: &Grid) -> Option<Steps>;
+    fn find(&self, sudoku: &Sudoku) -> Option<Steps>;
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::sudoku::{Sudoku, Value};
+use crate::sudoku::Sudoku;
 
 #[derive(Debug, PartialEq)]
 pub enum SolverError {
@@ -63,10 +63,10 @@ impl Solver {
         // TODO find a way to not start from front
         for row in 0..Sudoku::ROWS {
             for col in 0..Sudoku::COLS {
-                if sudoku.get(row, col) == Some(&Value::Empty) {
+                if sudoku.get(row, col).is_empty() {
                     for value in 1..=9 {
                         if Self::possible(&sudoku, row, col, value) {
-                            sudoku.set(row, col, Value::Number(value));
+                            sudoku.set(row, col, value);
                             self.solve_sudoku(sudoku);
                             sudoku.unset(row, col);
                         }
@@ -80,7 +80,7 @@ impl Solver {
 
     /// Slow check if the given value for field row, col can be set
     fn possible(sudoku: &Sudoku, row: u8, col: u8, value: u8) -> bool {
-        sudoku.get_house(row, col).find(|&v| Value::Number(value) == v).is_none()
+        sudoku.get_house(row, col).find(|&v| v.digit() == value).is_none()
     }
 
     /// Returns the list of solutions

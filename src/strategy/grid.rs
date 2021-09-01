@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::{Sudoku, Value, sudoku::GridError, types::{BLOCKS, COLS, HOUSES, Pos, ROWS}};
 
-use super::{Cell, CellState, Digit};
+use super::{Cell, CellState};
 
 /// Sudoku grid to manipulate with all cells + candidates
 /// The struct is only a helper grid to manipulate during solving.
@@ -63,7 +63,7 @@ impl Grid {
     /// Sets digit to this cell
     pub fn set(&mut self, row: u8, col: u8, digit: u8) {
         let index = col + row * Sudoku::ROWS;
-        self.cells[index as usize].state = CellState::Number(Digit::new(digit));
+        self.cells[index as usize].state = CellState::Number(digit);
     }
 
     /// Naive version to check if Sudoku is solved
@@ -146,6 +146,6 @@ mod tests {
         ];
 
         let grid: Grid = Sudoku::new(sudoku).unwrap().into();
-        // grid.get(0, 1).
+        // grid.get(0, 1).candidates()
     }
 }

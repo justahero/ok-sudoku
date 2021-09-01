@@ -3,8 +3,6 @@ mod grid;
 mod steps;
 mod strategy_solver;
 
-use std::num::NonZeroU8;
-
 pub use strategy_solver::StrategySolver;
 
 use self::{grid::Grid, steps::Steps};
@@ -49,30 +47,6 @@ impl Candidates {
 
 // TODO add impls for '&', '|', []: to bool etc that make sense
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
-pub struct Digit(NonZeroU8);
-
-impl Digit {
-    pub fn new(digit: u8) -> Self {
-        assert!(digit > 0);
-        assert!(digit <= 9);
-        Self::new_unchecked(digit).unwrap()
-    }
-
-    pub fn new_unchecked(digit: u8) -> Option<Self> {
-        NonZeroU8::new(digit).map(Self)
-    }
-
-    /// Returns the digit value
-    pub fn value(&self) -> u8 {
-        self.0.get()
-    }
-
-    pub fn index(&self) -> u8 {
-        (self.0.get() - 1) as u8
-    }
-}
-
 /// A Cell represents the content of a single field on the grid
 #[derive(Debug, Clone)]
 pub struct Cell {
@@ -87,7 +61,7 @@ impl Cell {
     pub fn new_digit(index: u8, digit: u8) -> Self {
         Cell {
             index,
-            state: CellState::Number(Digit::new(digit)),
+            state: CellState::Number(digit),
         }
     }
 
@@ -128,7 +102,7 @@ impl Cell {
 #[derive(Debug, Clone)]
 pub enum CellState {
     /// A specific set number
-    Number(Digit),
+    Number(u8),
     /// A set of candidates
     Candidate(Candidates),
 }
@@ -138,7 +112,7 @@ impl CellState {
     pub fn value(&self) -> u8 {
         match self {
             CellState::Candidate(_) => 0,
-            CellState::Number(digit) => digit.value(),
+            CellState::Number(digit) => *digit,
         }
     }
 

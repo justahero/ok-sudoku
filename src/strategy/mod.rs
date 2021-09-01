@@ -3,45 +3,67 @@ mod grid;
 mod steps;
 mod strategy_solver;
 
+use std::collections::HashSet;
+
+use bit_vec::BitVec;
 pub use strategy_solver::StrategySolver;
 
 use self::{grid::Grid, steps::Steps};
 
 #[derive(Debug, Clone)]
-pub struct Candidates(u16);
+pub struct Candidates(BitVec);
 
 impl Candidates {
+    pub fn all() -> Candidates {
+        Candidates(BitVec::from_elem(10, true))
+    }
+
     pub fn new() -> Candidates {
-        Candidates(0)
+        Candidates(BitVec::from_elem(10, false))
     }
 
     /// Sets the given candidate
     pub fn set(&mut self, candidate: u8) {
-        self.0 |= 1 << candidate;
+        self.0.set(candidate as usize, true);
+    }
+
+    /// Unsets the given candidate
+    pub fn unset(&mut self, candidate: u8) {
+        self.0.set(candidate as usize, false);
     }
 
     /// Returns true if candidate is set
-    pub fn is_set(&self, candidate: u8) -> bool {
-        // self.0.get((candidate - 1) as usize).is_some()
-        self.0 & (1 << candidate) > 0
-    }
-
-    /// Returns the inner bits
-    pub fn as_bits(&self) -> &u16 {
-        &self.0
+    pub fn get(&self, candidate: u8) -> bool {
+        self.0.get(candidate as usize).unwrap_or(false)
     }
 
     /// Returns an iterator over all candidates
     pub fn iter(&self) -> impl Iterator<Item = u8> + '_ {
-        (1u8..=9)
-            .into_iter()
-            .filter(move |&candidate| self.is_set(candidate))
-            .map(|candidate| candidate)
+        self.0
+            .iter()
+            .enumerate()
+            .filter(|(_index, v)| *v)
+            .map(|(index, _)| index as u8)
     }
 
     /// Returns the number of set candidates
     pub fn count(&self) -> u32 {
-        self.0.count_ones() as u32
+        self.0.iter().filter(|v| *v).count() as u32
+    }
+
+    /// Returns the intersection of two bit sets
+    pub fn intersect(lhs: &Self, rhs: &Self) -> Self {
+        let mut lhs = lhs.clone();
+        lhs.0.and(&rhs.0);
+        lhs
+    }
+}
+
+impl From<&HashSet<u8>> for Candidates {
+    fn from(set: &HashSet<u8>) -> Self {
+        let mut result = Candidates::new();
+        set.iter().for_each(|candidate| result.set(*candidate));
+        result
     }
 }
 
@@ -69,7 +91,7 @@ impl Cell {
     pub fn new_empty(index: u8) -> Self {
         Cell {
             index,
-            state: CellState::Candidate(Candidates::new()),
+            state: CellState::Candidates(Candidates::new()),
         }
     }
 
@@ -84,18 +106,18 @@ impl Cell {
     }
 
     /// Returns the digit value of the cell, either 1-9 or 0 if unset
-    pub fn value(&self) -> u8 {
-        self.state.value()
+    pub fn digit(&self) -> u8 {
+        self.state.digit()
+    }
+
+    /// Sets the list of candidates
+    pub fn set_candidates(&mut self, candidates: Candidates) {
+        self.state = CellState::Candidates(candidates);
     }
 
     /// Returns the list of candidates
     pub fn candidates(&self) -> Option<&Candidates> {
         self.state.candidates()
-    }
-
-    /// Returns the candidates if available
-    pub fn candidates_mut(&mut self) -> Option<&mut Candidates> {
-        self.state.canddiates_mut()
     }
 }
 
@@ -104,14 +126,14 @@ pub enum CellState {
     /// A specific set number
     Number(u8),
     /// A set of candidates
-    Candidate(Candidates),
+    Candidates(Candidates),
 }
 
 impl CellState {
     /// Returns the digit value of the cell, either 1-9 or 0 if unset
-    pub fn value(&self) -> u8 {
+    pub fn digit(&self) -> u8 {
         match self {
-            CellState::Candidate(_) => 0,
+            CellState::Candidates(_) => 0,
             CellState::Number(digit) => *digit,
         }
     }
@@ -119,16 +141,8 @@ impl CellState {
     /// Returns the list of candidates if available
     pub fn candidates(&self) -> Option<&Candidates> {
         match self {
-            CellState::Candidate(candidates) => Some(&candidates),
+            CellState::Candidates(candidates) => Some(&candidates),
             _ => None
-        }
-    }
-
-    /// Returns a mutable reference to list of candidates if available
-    pub fn canddiates_mut(&mut self) -> Option<&mut Candidates> {
-        match self {
-            CellState::Candidate(candidates) => Some(candidates),
-            _=> None,
         }
     }
 
@@ -136,7 +150,7 @@ impl CellState {
     pub fn is_digit(&self) -> bool {
         match self {
             CellState::Number(_) => true,
-            CellState::Candidate(_) => false,
+            CellState::Candidates(_) => false,
         }
     }
 
@@ -144,7 +158,7 @@ impl CellState {
     pub fn is_empty(&self) -> bool {
         match self {
             CellState::Number(_) => false,
-            CellState::Candidate(_) => true,
+            CellState::Candidates(_) => true,
         }
     }
 }

@@ -1,8 +1,6 @@
-use std::collections::HashSet;
-
 use crate::{Sudoku, Value, sudoku::GridError, types::{BLOCKS, COLS, HOUSES, Pos, ROWS}};
 
-use super::{Cell, CellState};
+use super::{Candidates, Cell, CellState};
 
 /// Sudoku grid to manipulate with all cells + candidates
 /// The struct is only a helper grid to manipulate during solving.
@@ -23,27 +21,28 @@ impl Grid {
             })
             .collect();
 
-        let mut grid = Grid { cells };
-        grid.init_candidates();
-        grid
+        Grid { cells }
     }
 
     /// Initializes all empty fields with candidates.
     ///
     /// **Note** this will not check or validate the candidates, e.g. empty fields
     ///
-    fn init_candidates(&mut self) {
+    pub fn init_candidates(&mut self) {
         for row in 0..9 {
             for col in 0..9 {
                 let index = col + row * Sudoku::ROWS;
-                // TODO make this more pleasant, bitwise OR ing
-                // ?
+
                 if self.cells[index as usize].is_empty() {
-                    let _neighbors = self
-                        .get_house(index)
-                        .map(|neighbor| neighbor.value())
-                        .filter(|v| *v == 0)
-                        .collect::<HashSet<u8>>();
+
+                    let candidates = self.get_house(index)
+                        .fold(Candidates::all(), |mut candidates, neighbor| {
+                            candidates.unset(neighbor.digit());
+                            candidates
+                        });
+
+                    let cell = &mut self.cells[index as usize];
+                    cell.set_candidates(candidates);
                 }
             }
         }
@@ -109,7 +108,7 @@ impl Grid {
     pub fn sudoku(&self) -> Result<Sudoku, GridError> {
         let numbers = self.cells
             .iter()
-            .map(|cell| cell.value())
+            .map(|cell| cell.digit())
             .collect::<Vec<_>>();
         Sudoku::new(numbers)
     }
@@ -145,7 +144,14 @@ mod tests {
             1, 0, 0, 9, 4, 0, 0, 0, 2,
         ];
 
-        let grid: Grid = Sudoku::new(sudoku).unwrap().into();
-        // grid.get(0, 1).candidates()
+        let mut grid: Grid = Sudoku::new(sudoku).unwrap().into();
+        grid.init_candidates();
+
+        let c = grid.get(0, 1).candidates();
+        assert!(c.is_some());
+
+        let c = c.unwrap();
+        assert_eq!(2, c.count());
+        assert_eq!(vec![1u8, 2], c.iter().collect::<Vec<_>>());
     }
 }

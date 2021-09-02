@@ -1,4 +1,3 @@
-mod layer;
 mod parser;
 pub mod sudoku;
 mod solver;

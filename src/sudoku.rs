@@ -105,16 +105,17 @@ impl Sudoku {
             return Err(GridError::Invalid(format!("Invalid number of fields - found {} elements", fields.len())));
         }
 
-        let cells = fields
+        let cells: Result<Vec<_>, _> = fields
             .iter()
             .enumerate()
             .map(|(index, value)| match value {
-                1..=9 => Cell::new_digit(index as u8, *value),
-                _ => Cell::new_empty(index as u8),
+                1..=9 => Ok(Cell::new_digit(index as u8, *value)),
+                0 => Ok(Cell::new_empty(index as u8)),
+                v => Err(GridError::Invalid(format!("Digit must be between 0..=9, was {}", v))),
             })
             .collect();
 
-        Ok(Sudoku { cells })
+        Ok(Sudoku { cells: cells? })
     }
 
     /// Initializes all empty fields with candidates.
@@ -124,11 +125,11 @@ impl Sudoku {
     pub fn init_candidates(&mut self) {
         for row in 0..9 {
             for col in 0..9 {
-                let index = col + row * Sudoku::ROWS;
+                let index = col + row * Self::ROWS;
 
                 if self.cells[index as usize].is_empty() {
                     let candidates = self.get_house(row, col)
-                        .fold(Candidates::all(), |mut candidates, neighbor| {
+                        .fold(Candidates::all(), |mut candidates, (_index, neighbor)| {
                             candidates.unset(neighbor.digit());
                             candidates
                         });
@@ -191,25 +192,21 @@ impl Sudoku {
     }
 
     /// Returns the house, all fields from same row, col and block
-    pub fn get_house(&self, row: u8, col: u8) -> impl Iterator<Item = &Cell> + '_ {
+    pub fn get_house(&self, row: u8, col: u8) -> impl Iterator<Item = (usize, &Cell)> + '_ {
         let index = col + row * Self::ROWS;
         let indices = &HOUSES[index as usize];
         indices
             .iter()
-            .map(move |&index| &self.cells[index as usize])
+            .enumerate()
+            .map(move |(index, _digit)| (index, &self.cells[index as usize]))
     }
 
     /// Returns the list of all field values with index
-    pub fn iter(&self) -> impl Iterator<Item = (u8, &Cell)> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = (usize, &Cell)> + '_ {
         self.cells
             .iter()
             .enumerate()
-            .map(move |(index, cell)| (index as u8, cell))
-    }
-
-    /// Returns an iterator over all cells
-    pub fn cells(&self) -> impl Iterator<Item = &Cell> {
-        self.cells.iter()
+            .map(move |(index, cell)| (index, cell))
     }
 }
 

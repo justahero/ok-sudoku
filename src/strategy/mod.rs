@@ -1,5 +1,5 @@
 mod algorithms;
-mod steps;
+mod step;
 mod strategy_solver;
 
 use std::collections::HashSet;
@@ -9,7 +9,7 @@ pub use strategy_solver::StrategySolver;
 
 use crate::Sudoku;
 
-use self::steps::Steps;
+use self::step::Step;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Candidates(BitVec);
@@ -35,7 +35,7 @@ impl Candidates {
 
     /// Returns true if candidate is set
     pub fn get(&self, candidate: u8) -> bool {
-        self.0.get(candidate as usize).unwrap_or(false)
+        self.0.get(candidate as usize).is_some()
     }
 
     /// Returns an iterator over all candidates
@@ -111,6 +111,7 @@ impl Cell {
 
     /// Sets the digit of this cell
     pub fn set_digit(&mut self, digit: u8) {
+        assert!(digit > 0);
         self.state = CellState::Number(digit);
     }
 
@@ -172,10 +173,10 @@ impl CellState {
     }
 }
 
-/// A `Strategy` is a distinct way to apply logic to determine
+/// A `Strategy` is a distinct way to apply logic to eliminate candidates or determine
 /// the next digit.
 pub trait Strategy {
-    fn find(&self, sudoku: &Sudoku) -> Option<Steps>;
+    fn find(&self, sudoku: &Sudoku) -> Option<Step>;
 }
 
 #[cfg(test)]

@@ -47,7 +47,9 @@ impl Solver {
     /// Useful to find all possible solutions of a given Sudoku
     /// **NOTE** can take a while to run.
     pub fn find_all(sudoku: &Sudoku) -> Solver {
-        let mut solver = Self { solutions: Vec::new() };
+        let mut solver = Self {
+            solutions: Vec::new(),
+        };
 
         solver.solve_sudoku(&mut sudoku.clone());
         solver
@@ -80,7 +82,7 @@ impl Solver {
 
     /// Slow check if the given value for field row, col can be set
     fn possible(sudoku: &Sudoku, row: u8, col: u8, value: u8) -> bool {
-        sudoku.get_house(row, col).find(|&v| v.digit() == value).is_none()
+        sudoku.get_house(row, col).find(|(_, cell)| cell.digit() == value).is_none()
     }
 
     /// Returns the list of solutions
@@ -169,6 +171,9 @@ mod tests {
             SolverError::TooManySolutions(2),
             Solver::find_unique(&sudoku).unwrap_err()
         );
-        assert!(solver.solutions.iter().all(|solution| expected.contains(solution)));
+        assert!(solver
+            .solutions
+            .iter()
+            .all(|solution| expected.contains(solution)));
     }
 }

@@ -144,12 +144,12 @@ pub(crate) struct Index(u8);
 
 impl Index {
     /// Creates a new Index based value
-    pub fn new(index: u8) -> Self {
+    pub fn _new(index: u8) -> Self {
         Index(index)
     }
 
     /// Returns the index
-    pub fn index(&self) -> u8 {
+    pub fn _index(&self) -> u8 {
         self.0
     }
 
@@ -173,7 +173,7 @@ impl Index {
 
     /// Returns the block the index is in
     #[inline(always)]
-    pub fn block(&self) -> u8 {
+    pub fn _block(&self) -> u8 {
         self.pos().block()
     }
 }

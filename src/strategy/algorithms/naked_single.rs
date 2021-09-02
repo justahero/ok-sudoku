@@ -1,5 +1,6 @@
-use crate::{Sudoku, strategy::{Strategy, steps::Steps}};
+use crate::{Sudoku, strategy::{Strategy, step::Step}};
 
+/// TODO hold data?
 pub struct NakedSingle {
     // TODO?
 }
@@ -11,9 +12,22 @@ impl NakedSingle {
 }
 
 impl Strategy for NakedSingle {
-    fn find(&self, _sudoku: &Sudoku) -> Option<Steps> {
-        // TODO maybe pass in list of all Cells (digits, canddiates) here as well?
-        None
+    fn find(&self, sudoku: &Sudoku) -> Option<Step> {
+        let result = sudoku
+            .iter()
+            .find(|(_index, cell)| {
+                if let Some(candidates) = cell.candidates() {
+                    candidates.count() == 1
+                } else {
+                    false
+                }
+            });
+
+        dbg!(&result);
+
+        result.map(|(_index, _cell)| {
+            Step::new()
+        })
     }
 }
 

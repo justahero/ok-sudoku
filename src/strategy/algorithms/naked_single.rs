@@ -23,8 +23,6 @@ impl Strategy for NakedSingle {
                 }
             });
 
-        dbg!(&result);
-
         result.map(|(_index, _cell)| {
             Step::new()
         })
@@ -54,7 +52,8 @@ mod tests {
             .69..3.2.
         ";
 
-        let sudoku = Sudoku::try_from(sudoku).unwrap();
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
         let strategy = NakedSingle::new();
 
         let result = strategy.find(&sudoku.into());

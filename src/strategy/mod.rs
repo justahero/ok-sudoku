@@ -35,7 +35,7 @@ impl Candidates {
 
     /// Returns true if candidate is set
     pub fn get(&self, candidate: u8) -> bool {
-        self.0.get(candidate as usize).is_some()
+        self.0.get(candidate as usize).unwrap_or(false)
     }
 
     /// Returns an iterator over all candidates

@@ -294,9 +294,7 @@ mod tests {
         sudoku.init_candidates();
 
         let c = sudoku.get(0, 1).candidates();
-        assert!(c.is_some());
 
-        let c = c.unwrap();
         assert_eq!(2, c.count());
         assert_eq!(vec![1u8, 2], c.iter().collect::<Vec<_>>());
     }

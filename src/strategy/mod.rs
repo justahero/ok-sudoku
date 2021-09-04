@@ -2,8 +2,6 @@ mod algorithms;
 mod step;
 mod strategy_solver;
 
-use std::collections::HashSet;
-
 use bit_vec::BitVec;
 pub use strategy_solver::StrategySolver;
 
@@ -21,8 +19,13 @@ impl Candidates {
     }
 
     /// Creates a new empty candidates set
-    pub fn new() -> Candidates {
+    pub fn empty() -> Candidates {
         Candidates(BitVec::from_elem(10, false))
+    }
+
+    /// Returns true if the candidates set is empty
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 
     /// Sets the given candidate
@@ -62,14 +65,6 @@ impl Candidates {
     }
 }
 
-impl From<&HashSet<u8>> for Candidates {
-    fn from(set: &HashSet<u8>) -> Self {
-        let mut result = Candidates::new();
-        set.iter().for_each(|candidate| result.set(*candidate));
-        result
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Cell {
     /// A specific set number
@@ -81,7 +76,7 @@ pub enum Cell {
 impl Cell {
     /// Creates an empty Cell without candidates
     pub fn empty() -> Self {
-        Cell::Candidates(Candidates::new())
+        Cell::Candidates(Candidates::empty())
     }
 
     /// Sets the digit of this cell
@@ -104,10 +99,10 @@ impl Cell {
     }
 
     /// Returns the list of candidates if available
-    pub fn candidates(&self) -> Option<&Candidates> {
+    pub fn candidates(&self) -> Candidates {
         match self {
-            Cell::Candidates(candidates) => Some(&candidates),
-            _ => None
+            Cell::Candidates(candidates) => candidates.clone(),
+            _ => Candidates::empty(),
         }
     }
 
@@ -139,7 +134,7 @@ impl Cell {
 
     /// Unsets the cell to an empty one without candidates
     pub fn unset(&mut self) {
-        *self = Cell::Candidates(Candidates::new())
+        *self = Cell::Candidates(Candidates::empty())
     }
 }
 
@@ -155,7 +150,7 @@ mod tests {
 
     #[test]
     fn test_candidates_count() {
-        let mut candidates = Candidates::new();
+        let mut candidates = Candidates::empty();
         assert_eq!(0, candidates.count());
 
         candidates.set(1);
@@ -166,7 +161,7 @@ mod tests {
 
     #[test]
     fn test_candidates_iterator() {
-        let mut candidates = Candidates::new();
+        let mut candidates = Candidates::empty();
         candidates.set(1);
         candidates.set(4);
         candidates.set(6);

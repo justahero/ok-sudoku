@@ -14,4 +14,20 @@ impl Step {
             eliminated_candidates: vec![],
         }
     }
+
+    /// Sets the digit
+    pub fn set_digit(&mut self, index: usize, digit: u8) {
+        assert!(digit > 0);
+        self.digit = Some((index, digit));
+    }
+
+    /// Returns true if this contains a set digit
+    pub fn has_digit(&self) -> bool {
+        self.digit.is_some()
+    }
+
+    /// Returns the digit of this Step
+    pub fn digit(&self) -> Option<&(usize, u8)> {
+        self.digit.as_ref()
+    }
 }

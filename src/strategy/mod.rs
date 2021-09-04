@@ -15,10 +15,12 @@ use self::step::Step;
 pub struct Candidates(BitVec);
 
 impl Candidates {
+    /// Creates a new candidates with all candidates
     pub fn all() -> Candidates {
         Candidates(BitVec::from_elem(10, true))
     }
 
+    /// Creates a new empty candidates set
     pub fn new() -> Candidates {
         Candidates(BitVec::from_elem(10, false))
     }
@@ -77,6 +79,7 @@ pub enum Cell {
 }
 
 impl Cell {
+    /// Creates an empty Cell without candidates
     pub fn empty() -> Self {
         Cell::Candidates(Candidates::new())
     }
@@ -105,6 +108,16 @@ impl Cell {
         match self {
             Cell::Candidates(candidates) => Some(&candidates),
             _ => None
+        }
+    }
+
+    /// Returns an iterator over all candidates
+    /// In case the cell contains a digit, this returns no candidates otherwise
+    /// the list of candidates
+    pub fn candidates_vec(&self) -> Vec<u8> {
+        match self {
+            Cell::Candidates(candidates) => candidates.iter().collect(),
+            _ => Vec::new(),
         }
     }
 

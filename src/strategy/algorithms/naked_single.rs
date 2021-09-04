@@ -1,9 +1,7 @@
 use crate::{Sudoku, strategy::{Strategy, step::Step}};
 
-/// TODO hold data?
-pub struct NakedSingle {
-    // TODO?
-}
+#[derive(Debug)]
+pub struct NakedSingle {}
 
 impl NakedSingle {
     pub fn new() -> Self {
@@ -23,8 +21,11 @@ impl Strategy for NakedSingle {
                 }
             });
 
-        result.map(|(_index, _cell)| {
-            Step::new()
+        result.map(|(index, cell)| {
+            let candidate = cell.candidates_vec()[0];
+            let mut step = Step::new();
+            step.set_digit(index, candidate);
+            step
         })
     }
 }
@@ -34,10 +35,10 @@ mod tests {
     use std::convert::TryFrom;
 
     use crate::{Sudoku, strategy::Strategy};
-
     use super::NakedSingle;
 
-    /// Example taken from: http://hodoku.sourceforge.net/en/tech_singles.php
+    /// Example taken from:
+    /// http://hodoku.sourceforge.net/en/show_example.php?file=n102&tech=Naked+Single
     #[test]
     fn finds_naked_single() {
         let sudoku = r"
@@ -56,7 +57,8 @@ mod tests {
         sudoku.init_candidates();
         let strategy = NakedSingle::new();
 
-        let result = strategy.find(&sudoku.into());
-        assert!(result.is_some());
+        let step = strategy.find(&sudoku.into()).unwrap();
+        assert!(step.has_digit());
+        assert_eq!((20_usize, 5_u8), *step.digit().unwrap());
     }
 }

@@ -140,7 +140,6 @@ impl Sudoku {
         }
     }
 
-
     /// Returns the cell given by coordinates
     pub fn get(&self, row: u8, col: u8) -> &Cell {
         let index = col + row * Self::ROWS;

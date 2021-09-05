@@ -2,6 +2,8 @@ mod algorithms;
 mod step;
 mod strategy_solver;
 
+use std::ops::BitOrAssign;
+
 use bit_vec::BitVec;
 pub use strategy_solver::StrategySolver;
 
@@ -53,8 +55,8 @@ impl Candidates {
     }
 
     /// Returns the number of set candidates
-    pub fn count(&self) -> u32 {
-        self.0.iter().filter(|v| *v).count() as u32
+    pub fn count(&self) -> usize {
+        self.0.iter().filter(|v| *v).count()
     }
 
     /// Returns the intersection of two bit sets
@@ -62,6 +64,16 @@ impl Candidates {
         let mut lhs = lhs.clone();
         lhs.0.and(&rhs.0);
         lhs
+    }
+
+    pub fn or(&mut self, rhs: &Self) -> bool {
+        self.0.or(&rhs.0)
+    }
+}
+
+impl BitOrAssign for Candidates {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.or(&rhs);
     }
 }
 

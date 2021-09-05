@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use crate::{Sudoku, strategy::{Strategy, step::Step}};
+use crate::{Sudoku, strategy::{Candidates, Strategy, step::Step}};
 
 #[derive(Debug)]
 pub struct NakedSubset {
@@ -12,6 +12,11 @@ impl NakedSubset {
     pub fn pair() -> Self {
         Self { count: 2 }
     }
+
+    /// Create a new Naked Subset for triples
+    pub fn triple() -> Self {
+        Self { count: 3 }
+    }
 }
 
 impl Strategy for NakedSubset {
@@ -20,15 +25,39 @@ impl Strategy for NakedSubset {
             for indices in (0u8..9).permutations(self.count) {
                 let cells = indices
                     .iter()
-                    .map(|&col| sudoku.get(row, col).candidates_vec())
+                    .map(|&col| sudoku.get(row, col))
                     .collect::<Vec<_>>();
 
-                if cells.iter().all(|candidates| candidates.len() == self.count) {
-                    let first = &cells[0];
-                    if cells.iter().skip(1).all(|candidates| first == candidates) {
-                        let step = Step::new();
-                        return Some(step);
-                    }
+                let subset = cells.iter().fold(Candidates::empty(), |mut candidates, &cell| {
+                    candidates |= cell.candidates();
+                    candidates
+                });
+
+                // check the number of total candidates is exactly count
+                if subset.count() == self.count {
+                    let step = Step::new();
+                    return Some(step);
+                }
+            }
+        }
+
+        for col in 0..9 {
+            for indices in (0u8..9).permutations(self.count) {
+                let cells = indices
+                    .iter()
+                    .map(|&row| sudoku.get(row, col))
+                    .collect::<Vec<_>>();
+
+                // combine all available candidates
+                let subset = cells.iter().fold(Candidates::empty(), |mut candidates, &cell| {
+                    candidates |= cell.candidates();
+                    candidates
+                });
+
+                // check the number of total candidates is exactly count
+                if subset.count() == self.count {
+                    let step = Step::new();
+                    return Some(step);
                 }
             }
         }
@@ -47,7 +76,7 @@ mod tests {
 
     /// Example of naked pair: http://hodoku.sourceforge.net/en/show_example.php?file=n201&tech=Naked+Pair
     #[test]
-    fn find_naked_pairs() {
+    fn find_naked_pair() {
         let sudoku = r"
             7..849.3.
             928135..6
@@ -64,6 +93,28 @@ mod tests {
         sudoku.init_candidates();
         let strategy = NakedSubset::pair();
 
-        let step = strategy.find(&sudoku).unwrap();
+        let _step = strategy.find(&sudoku).unwrap();
+    }
+
+    /// Example: http://hodoku.sourceforge.net/en/show_example.php?file=n301&tech=Naked+Triple
+    #[test]
+    fn find_naked_triple() {
+        let sudoku = r"
+            ...29438.
+            ...17864.
+            48.3561..
+            ..48375.1
+            ...4157..
+            5..629834
+            953782416
+            126543978
+            .4.961253
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        let strategy = NakedSubset::triple();
+
+        let _step = strategy.find(&sudoku).unwrap();
     }
 }

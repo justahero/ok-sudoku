@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use crate::{Sudoku, strategy::{Candidates, Cell, Strategy, step::Step}};
+use crate::{Sudoku, strategy::{Candidates, Strategy, step::Step}};
 
 #[derive(Debug)]
 pub struct NakedSubset {
@@ -18,15 +18,16 @@ impl<'a> NakedSubset {
         Self { count: 3 }
     }
 
-    fn find_tuple<F>(&self, f: F) -> Option<Step>
-    where
-        Self: Sized,
-        F: Fn(usize) -> &'a Cell,
-    {
-        for indices in (0u8..9).permutations(self.count) {
+    /// Create a new Naked Subset for quadruplets
+    pub fn quadruple() -> Self {
+        Self { count: 4 }
+    }
+
+    fn find_tuple(&self, sudoku: &Sudoku, cells: &[u8; 9]) -> Option<Step> {
+        for indices in cells.iter().permutations(self.count) {
             let cells = indices
                 .iter()
-                .map(|&index| f(index as usize))
+                .map(|&index| sudoku.get_by(*index as usize))
                 .collect::<Vec<_>>();
 
             let subset = cells.iter().fold(Candidates::empty(), |mut candidates, &cell| {
@@ -36,6 +37,7 @@ impl<'a> NakedSubset {
 
             // check the number of total candidates is exactly count
             if subset.count() == self.count {
+                // TODO handle this correctly, find all candidates, and elimination
                 let step = Step::new();
                 return Some(step);
             }
@@ -47,43 +49,20 @@ impl<'a> NakedSubset {
 impl Strategy for NakedSubset {
     fn find(&self, sudoku: &Sudoku) -> Option<Step> {
         for row in sudoku.get_rows() {
-            for indices in row.iter().permutations(self.count) {
-                let cells = indices
-                    .iter()
-                    .map(|&index| sudoku.get_by(*index as usize))
-                    .collect::<Vec<_>>();
-
-                let subset = cells.iter().fold(Candidates::empty(), |mut candidates, &cell| {
-                    candidates |= cell.candidates();
-                    candidates
-                });
-
-                // check the number of total candidates is exactly count
-                if subset.count() == self.count {
-                    let step = Step::new();
-                    return Some(step);
-                }
+            if let Some(step) = self.find_tuple(sudoku, row) {
+                return Some(step);
             }
         }
 
-        for col in 0..9 {
-            for indices in (0u8..9).permutations(self.count) {
-                let cells = indices
-                    .iter()
-                    .map(|&row| sudoku.get(row, col))
-                    .collect::<Vec<_>>();
+        for col in sudoku.get_cols() {
+            if let Some(step) = self.find_tuple(sudoku, col) {
+                return Some(step);
+            }
+        }
 
-                // combine all available candidates
-                let subset = cells.iter().fold(Candidates::empty(), |mut candidates, &cell| {
-                    candidates |= cell.candidates();
-                    candidates
-                });
-
-                // check the number of total candidates is exactly count
-                if subset.count() == self.count {
-                    let step = Step::new();
-                    return Some(step);
-                }
+        for block in sudoku.get_blocks() {
+            if let Some(step) = self.find_tuple(sudoku, block) {
+                return Some(step);
             }
         }
 
@@ -139,6 +118,27 @@ mod tests {
         let mut sudoku = Sudoku::try_from(sudoku).unwrap();
         sudoku.init_candidates();
         let strategy = NakedSubset::triple();
+
+        let _step = strategy.find(&sudoku).unwrap();
+    }
+
+    #[test]
+    fn find_naked_quadruple() {
+        let sudoku = r"
+            532786...
+            978241.6.
+            ..1953287
+            .254..67.
+            ..3617.52
+            7..5.....
+            ...1.....
+            ...8.51.6
+            ...3...98
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        let strategy = NakedSubset::quadruple();
 
         let _step = strategy.find(&sudoku).unwrap();
     }

@@ -191,8 +191,8 @@ impl Sudoku {
     }
 
     /// Returns an iterator over all columns
-    pub fn get_cols(&self) -> impl Iterator<Item = (usize, &[u8; 9])> {
-        COLS.iter().enumerate()
+    pub fn get_cols(&self) -> impl Iterator<Item = &[u8; 9]> {
+        COLS.iter()
     }
 
     /// Returns all fields from the given block
@@ -205,8 +205,8 @@ impl Sudoku {
     }
 
     /// Returns an iterator over all blocks
-    pub fn get_blocks(&self) -> impl Iterator<Item = (usize, &[u8; 9])> {
-        BLOCKS.iter().enumerate()
+    pub fn get_blocks(&self) -> impl Iterator<Item = &[u8; 9]> {
+        BLOCKS.iter()
     }
 
     /// Returns the house, all fields from same row, col and block

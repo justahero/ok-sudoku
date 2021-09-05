@@ -1,13 +1,13 @@
 use itertools::Itertools;
 
-use crate::{Sudoku, strategy::{Candidates, Strategy, step::Step}};
+use crate::{Sudoku, strategy::{Candidates, Cell, Strategy, step::Step}};
 
 #[derive(Debug)]
 pub struct NakedSubset {
     count: usize,
 }
 
-impl NakedSubset {
+impl<'a> NakedSubset {
     /// Create a new Naked Subset for pairs of 2
     pub fn pair() -> Self {
         Self { count: 2 }
@@ -16,6 +16,14 @@ impl NakedSubset {
     /// Create a new Naked Subset for triples
     pub fn triple() -> Self {
         Self { count: 3 }
+    }
+
+    fn find_tuple<F>(&self, f: F) -> Option<Step>
+    where
+        Self: Sized,
+        F: Fn(u8, u8) -> dyn Iterator<Item = (usize, &'a Cell)>,
+    {
+        None
     }
 }
 

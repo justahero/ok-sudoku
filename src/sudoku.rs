@@ -140,6 +140,11 @@ impl Sudoku {
         }
     }
 
+    /// Returns the cell given by index
+    pub fn get_by(&self, index: usize) -> &Cell {
+        &self.cells[index]
+    }
+
     /// Returns the cell given by coordinates
     pub fn get(&self, row: u8, col: u8) -> &Cell {
         let index = col + row * Self::ROWS;
@@ -173,8 +178,8 @@ impl Sudoku {
     }
 
     /// Returns an iterator over all rows
-    pub fn get_rows(&self) -> impl Iterator<Item = (usize, &[u8; 9])> {
-        ROWS.iter().enumerate()
+    pub fn get_rows(&self) -> impl Iterator<Item = &[u8; 9]> {
+        ROWS.iter()
     }
 
     /// Returns all fields for the given column

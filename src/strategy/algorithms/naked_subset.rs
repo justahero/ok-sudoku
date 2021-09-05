@@ -21,19 +21,36 @@ impl<'a> NakedSubset {
     fn find_tuple<F>(&self, f: F) -> Option<Step>
     where
         Self: Sized,
-        F: Fn(u8, u8) -> dyn Iterator<Item = (usize, &'a Cell)>,
+        F: Fn(usize) -> &'a Cell,
     {
+        for indices in (0u8..9).permutations(self.count) {
+            let cells = indices
+                .iter()
+                .map(|&index| f(index as usize))
+                .collect::<Vec<_>>();
+
+            let subset = cells.iter().fold(Candidates::empty(), |mut candidates, &cell| {
+                candidates |= cell.candidates();
+                candidates
+            });
+
+            // check the number of total candidates is exactly count
+            if subset.count() == self.count {
+                let step = Step::new();
+                return Some(step);
+            }
+        }
         None
     }
 }
 
 impl Strategy for NakedSubset {
     fn find(&self, sudoku: &Sudoku) -> Option<Step> {
-        for row in 0..9 {
-            for indices in (0u8..9).permutations(self.count) {
+        for row in sudoku.get_rows() {
+            for indices in row.iter().permutations(self.count) {
                 let cells = indices
                     .iter()
-                    .map(|&col| sudoku.get(row, col))
+                    .map(|&index| sudoku.get_by(*index as usize))
                     .collect::<Vec<_>>();
 
                 let subset = cells.iter().fold(Candidates::empty(), |mut candidates, &cell| {

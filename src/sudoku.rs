@@ -119,7 +119,7 @@ impl Sudoku {
 
     /// Initializes all empty fields with candidates.
     ///
-    /// **Note** this will not check or validate the candidates, e.g. empty fields
+    /// **Note** this will not check or validate the candidates
     ///
     pub fn init_candidates(&mut self) {
         for row in 0..9 {
@@ -172,12 +172,22 @@ impl Sudoku {
             .map(move |&index| (index as usize, &self.cells[index as usize]))
     }
 
+    /// Returns an iterator over all rows
+    pub fn get_rows(&self) -> impl Iterator<Item = (usize, &[u8; 9])> {
+        ROWS.iter().enumerate()
+    }
+
     /// Returns all fields for the given column
     pub fn get_col(&self, col: u8) -> impl Iterator<Item = (usize, &Cell)> + '_ {
         let indices = &COLS[col as usize];
         indices
             .iter()
             .map(move |&index| (index as usize, &self.cells[index as usize]))
+    }
+
+    /// Returns an iterator over all columns
+    pub fn get_cols(&self) -> impl Iterator<Item = (usize, &[u8; 9])> {
+        COLS.iter().enumerate()
     }
 
     /// Returns all fields from the given block
@@ -187,6 +197,11 @@ impl Sudoku {
         indices
             .iter()
             .map(move |&index| (index as usize, &self.cells[index as usize]))
+    }
+
+    /// Returns an iterator over all blocks
+    pub fn get_blocks(&self) -> impl Iterator<Item = (usize, &[u8; 9])> {
+        BLOCKS.iter().enumerate()
     }
 
     /// Returns the house, all fields from same row, col and block

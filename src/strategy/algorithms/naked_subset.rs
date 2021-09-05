@@ -38,6 +38,7 @@ impl<'a> NakedSubset {
             // check the number of total candidates is exactly count
             if subset.count() == self.count {
                 // TODO handle this correctly, find all candidates, and elimination
+                println!("CELLS: {:?}, SUBSET: {:?}", cells, subset);
                 let step = Step::new();
                 return Some(step);
             }
@@ -97,6 +98,7 @@ mod tests {
         sudoku.init_candidates();
         let strategy = NakedSubset::pair();
 
+        // TODO test specific pair of candidates and cells
         let _step = strategy.find(&sudoku).unwrap();
     }
 
@@ -119,6 +121,7 @@ mod tests {
         sudoku.init_candidates();
         let strategy = NakedSubset::triple();
 
+        // TODO test specific pair of candidates and cells
         let _step = strategy.find(&sudoku).unwrap();
     }
 
@@ -140,6 +143,7 @@ mod tests {
         sudoku.init_candidates();
         let strategy = NakedSubset::quadruple();
 
+        // TODO test specific pair of candidates and cells
         let _step = strategy.find(&sudoku).unwrap();
     }
 }

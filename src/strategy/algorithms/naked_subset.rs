@@ -24,25 +24,31 @@ impl<'a> NakedSubset {
     }
 
     fn find_tuple(&self, sudoku: &Sudoku, cells: &[u8; 9]) -> Option<Step> {
-        for indices in cells.iter().permutations(self.count) {
-            let cells = indices
-                .iter()
-                .map(|&index| sudoku.get_by(*index as usize))
-                .collect::<Vec<_>>();
+        // get all neighbors, cells that have only candidates
+        let neighbors = cells
+            .iter()
+            .map(|&index| sudoku.get_by(index as usize))
+            .filter(|&cell| cell.is_empty())
+            .collect::<Vec<_>>();
 
-            let subset = cells.iter().fold(Candidates::empty(), |mut candidates, &cell| {
-                candidates |= cell.candidates();
-                candidates
-            });
+        // for all neighbors find the possible naked subset
+        if neighbors.len() > self.count {
+            for group in neighbors.iter().permutations(self.count) {
+                let subset = group.iter().fold(Candidates::empty(), |mut candidates, &cell| {
+                    candidates |= cell.candidates();
+                    candidates
+                });
 
-            // check the number of total candidates is exactly count
-            if subset.count() == self.count {
-                // TODO handle this correctly, find all candidates, and elimination
-                println!("CELLS: {:?}, SUBSET: {:?}", cells, subset);
-                let step = Step::new();
-                return Some(step);
+                // When the subset contains the same number of candidates
+                if subset.count() == self.count {
+                    // TODO handle this correctly, find all candidates, and elimination
+                    println!("CELLS: {:?}, SUBSET: {:?}", group, subset);
+                    let step = Step::new();
+                    return Some(step);
+                }
             }
         }
+
         None
     }
 }
@@ -125,6 +131,7 @@ mod tests {
         let _step = strategy.find(&sudoku).unwrap();
     }
 
+    /// Example: http://hodoku.sourceforge.net/en/show_example.php?file=n402&tech=Naked+Quadruple
     #[test]
     fn find_naked_quadruple() {
         let sudoku = r"

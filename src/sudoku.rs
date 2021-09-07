@@ -1,6 +1,6 @@
 use std::{convert::TryFrom, fmt::{self, Debug, Display}};
 
-use crate::{parser::parse_sudoku, strategy::{Candidates, Cell}, types::{BLOCKS, COLS, HOUSES, Pos, ROWS}};
+use crate::{Candidates, Cell, parser::parse_sudoku, types::{BLOCKS, COLS, HOUSES, Pos, ROWS}};
 
 #[derive(Debug)]
 pub enum GridError {

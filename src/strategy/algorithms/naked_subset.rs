@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use crate::{Sudoku, strategy::{Candidates, Strategy, step::Step}};
+use crate::{Candidates, Sudoku, strategy::{Strategy, step::Step}};
 
 #[derive(Debug)]
 pub struct NakedSubset {

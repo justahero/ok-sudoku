@@ -27,15 +27,14 @@ impl<'a> NakedSubset {
         // get all neighbors, cells that have only candidates
         let neighbors = cells
             .iter()
-            .map(|&index| sudoku.get_by(index as usize))
-            .filter(|&cell| cell.is_empty())
+            .filter(|&index| sudoku.get_by(*index as usize).is_empty())
             .collect::<Vec<_>>();
 
         // for all available neighbors check if there is a naked subset
         if neighbors.len() > self.count {
             for group in neighbors.iter().permutations(self.count) {
-                let subset = group.iter().fold(Candidates::empty(), |mut candidates, &cell| {
-                    candidates |= cell.candidates();
+                let subset = group.iter().fold(Candidates::empty(), |mut candidates, &&index| {
+                    candidates |= sudoku.get_by(*index as usize).candidates();
                     candidates
                 });
 
@@ -44,14 +43,13 @@ impl<'a> NakedSubset {
                     let mut step = Step::new();
 
                     // for all cells outside the naked subset eliminate these candidates
-                    let indices = group.iter().map(|&cell| cell.index()).collect::<Vec<_>>();
                     neighbors
                         .iter()
-                        .filter(|&cell| !indices.contains(&cell.index()))
-                        .for_each(|&cell| {
+                        .filter(|index| !group.contains(index))
+                        .for_each(|&&index| {
                             for c in subset.iter() {
-                                if cell.candidates().get(c) {
-                                    step.eliminate_candidate(cell.index(), c);
+                                if sudoku.get_by(index as usize).candidates().get(c) {
+                                    step.eliminate_candidate(index as usize, c);
                                 }
                             }
                         });

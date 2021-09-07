@@ -107,9 +107,10 @@ impl Sudoku {
 
         let cells: Result<Vec<_>, _> = fields
             .iter()
-            .map(|value| match value {
-                1..=9 => Ok(Cell::Number(*value)),
-                0 => Ok(Cell::empty()),
+            .enumerate()
+            .map(|(index, value)| match value {
+                1..=9 => Ok(Cell::number(index, *value)),
+                0 => Ok(Cell::empty(index)),
                 v => Err(GridError::Invalid(format!("Digit must be between 0..=9, was {}", v))),
             })
             .collect();

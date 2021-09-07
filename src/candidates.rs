@@ -58,6 +58,14 @@ impl Candidates {
         lhs
     }
 
+    /// Returns the difference of two bit sets
+    pub fn difference(lhs: &Self, rhs: &Self) -> Self {
+        let mut lhs = lhs.clone();
+        lhs.0.difference(&rhs.0);
+        lhs
+    }
+
+    /// Returns a new Candidates list containing all entries from both sets
     pub fn or(&mut self, rhs: &Self) -> bool {
         self.0.or(&rhs.0)
     }

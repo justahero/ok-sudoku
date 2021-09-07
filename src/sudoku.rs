@@ -142,6 +142,7 @@ impl Sudoku {
     }
 
     /// Returns the cell given by index
+    #[inline(always)]
     pub fn get_by(&self, index: usize) -> &Cell {
         &self.cells[index]
     }
@@ -179,6 +180,7 @@ impl Sudoku {
     }
 
     /// Returns an iterator over all rows
+    #[inline(always)]
     pub fn get_rows(&self) -> impl Iterator<Item = &[u8; 9]> {
         ROWS.iter()
     }
@@ -192,6 +194,7 @@ impl Sudoku {
     }
 
     /// Returns an iterator over all columns
+    #[inline(always)]
     pub fn get_cols(&self) -> impl Iterator<Item = &[u8; 9]> {
         COLS.iter()
     }
@@ -206,6 +209,7 @@ impl Sudoku {
     }
 
     /// Returns an iterator over all blocks
+    #[inline(always)]
     pub fn get_blocks(&self) -> impl Iterator<Item = &[u8; 9]> {
         BLOCKS.iter()
     }

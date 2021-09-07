@@ -27,14 +27,14 @@ impl<'a> NakedSubset {
         // get all neighbors, cells that have only candidates
         let neighbors = cells
             .iter()
-            .map(|&index| (index, sudoku.get_by(index as usize)))
-            .filter(|&(_index, cell)| cell.is_empty())
+            .map(|&index| sudoku.get_by(index as usize))
+            .filter(|&cell| cell.is_empty())
             .collect::<Vec<_>>();
 
         // for all available neighbors check if there is a naked subset
         if neighbors.len() > self.count {
             for group in neighbors.iter().permutations(self.count) {
-                let subset = group.iter().fold(Candidates::empty(), |mut candidates, (_, cell)| {
+                let subset = group.iter().fold(Candidates::empty(), |mut candidates, &cell| {
                     candidates |= cell.candidates();
                     candidates
                 });
@@ -44,18 +44,18 @@ impl<'a> NakedSubset {
                     let mut step = Step::new();
 
                     // for all cells outside the naked subset eliminate these candidates
-                    let indices = group.iter().map(|(index, _cell)| *index).collect::<Vec<_>>();
+                    let indices = group.iter().map(|&cell| cell.index()).collect::<Vec<_>>();
                     neighbors
                         .iter()
-                        .filter(|(index, _neighbor)| !indices.contains(index))
-                        .for_each(|(index, cell)| {
+                        .filter(|&cell| !indices.contains(&cell.index()))
+                        .for_each(|&cell| {
                             for c in subset.iter() {
                                 if cell.candidates().get(c) {
-                                    step.eliminate_candidate(*index as usize, c);
+                                    step.eliminate_candidate(cell.index(), c);
                                 }
                             }
                         });
-                    
+
                     return Some(step);
                 }
             }
@@ -163,6 +163,7 @@ mod tests {
         let strategy = NakedSubset::quadruple();
 
         let step = strategy.find(&sudoku).unwrap();
+        dbg!(&step);
         assert_eq!(10, step.eliminated_candidates().len());
     }
 }

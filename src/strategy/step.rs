@@ -8,6 +8,8 @@ pub struct Step {
     digit: Option<(usize, u8)>,
     /// The list of candidates to eliminate for each cell index
     eliminated_candidates: Vec<(usize, u8)>,
+    /// The list of constrained candidates
+    constrained_candidates: Vec<(usize, u8)>,
 }
 
 impl Step {
@@ -15,6 +17,7 @@ impl Step {
         Self {
             digit: None,
             eliminated_candidates: vec![],
+            constrained_candidates: vec![],
         }
     }
 

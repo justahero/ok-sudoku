@@ -1,6 +1,9 @@
 use itertools::Itertools;
 
-use crate::{Candidates, Sudoku, strategy::{Strategy, step::Step}};
+use crate::{
+    strategy::{step::Step, Strategy},
+    Candidates, Sudoku,
+};
 
 #[derive(Debug)]
 pub struct NakedSubset {
@@ -33,10 +36,12 @@ impl<'a> NakedSubset {
         // for all available neighbors check if there is a naked subset
         if neighbors.len() > self.count {
             for group in neighbors.iter().permutations(self.count) {
-                let subset = group.iter().fold(Candidates::empty(), |mut candidates, &&index| {
-                    candidates |= sudoku.get_by(*index as usize).candidates();
-                    candidates
-                });
+                let subset = group
+                    .iter()
+                    .fold(Candidates::empty(), |mut candidates, &&index| {
+                        candidates |= sudoku.get_by(*index as usize).candidates();
+                        candidates
+                    });
 
                 // In case the subset contains the same number of candidates
                 if subset.count() == self.count {
@@ -91,7 +96,7 @@ impl Strategy for NakedSubset {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{Sudoku, strategy::Strategy};
+    use crate::{strategy::Strategy, Sudoku};
 
     use super::NakedSubset;
 

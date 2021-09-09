@@ -65,7 +65,7 @@ impl Candidates {
         lhs
     }
 
-    /// Returns a new Candidates list containing all entries from both sets
+    /// Updates this BitVec combining the other candidates using logical "or".
     pub fn or(&mut self, rhs: &Self) -> bool {
         self.0.or(&rhs.0)
     }

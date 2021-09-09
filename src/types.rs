@@ -143,6 +143,16 @@ pub(crate) struct Pos(u8, u8);
 pub(crate) struct Index(u8);
 
 impl Index {
+    /// Creates a new Index based value
+    pub fn _new(index: u8) -> Self {
+        Index(index)
+    }
+
+    /// Returns the index
+    pub fn _index(&self) -> u8 {
+        self.0
+    }
+
     /// Returns the row on the board
     #[inline(always)]
     pub fn row(&self) -> Row {
@@ -159,6 +169,12 @@ impl Index {
     #[inline(always)]
     pub fn pos(&self) -> Pos {
         Pos(self.row().0, self.col().0)
+    }
+
+    /// Returns the block the index is in
+    #[inline(always)]
+    pub fn _block(&self) -> u8 {
+        self.pos().block()
     }
 }
 

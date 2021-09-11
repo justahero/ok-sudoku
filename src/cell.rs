@@ -1,9 +1,9 @@
 use crate::Candidates;
 
-/// A single cell on the board with either a digit or a list of candidates
+/// The state of single cell on the board with either a digit or a list of candidates
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CellState {
-    /// A specific set number
+    /// A specific set digit
     Number(u8),
     /// A set of candidates
     Candidates(Candidates),

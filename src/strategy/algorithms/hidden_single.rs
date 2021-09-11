@@ -1,8 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use crate::{
     strategy::{step::Step, Strategy},
-    Candidates, Sudoku,
+    Sudoku,
 };
 
 #[derive(Debug)]
@@ -84,7 +84,7 @@ mod tests {
     use super::HiddenSingle;
 
     #[test]
-    fn test_hidden_single() {
+    fn hidden_single_found() {
         let sudoku = r"
             .28..7...
             .16.83.7.
@@ -110,11 +110,11 @@ mod tests {
     }
 
     #[test]
-    fn test_hidden_single_not_found() {
+    fn hidden_single_not_found() {
         let sudoku = r"
             .28..7...
             .16.83.7.
-            ....2.851
+            ...62.851
             13729....
             ...73....
             ....463.7
@@ -122,5 +122,11 @@ mod tests {
             ...86.14.
             ...3..7..
         ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        let strategy = HiddenSingle::new();
+
+        assert_eq!(None, strategy.find(&sudoku));
     }
 }

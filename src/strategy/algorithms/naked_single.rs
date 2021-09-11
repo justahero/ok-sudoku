@@ -13,12 +13,12 @@ impl Strategy for NakedSingle {
     fn find(&self, sudoku: &Sudoku) -> Option<Step> {
         let result = sudoku
             .iter()
-            .find(|(_index, cell)| cell.candidates().count() == 1);
+            .find(|cell| cell.candidates().count() == 1);
 
-        result.map(|(index, cell)| {
+        result.map(|cell| {
             let candidate = cell.candidates_vec()[0];
             let mut step = Step::new();
-            step.set_digit(index, candidate);
+            step.set_digit(cell.index(), candidate);
             step
         })
     }
@@ -54,5 +54,27 @@ mod tests {
         let step = strategy.find(&sudoku).unwrap();
         assert!(step.has_digit());
         assert_eq!((20_usize, 5_u8), *step.digit().unwrap());
+    }
+
+    /// Example Expert #18 from Good Sudoku
+    #[test]
+    fn finds_naked_single_not_found() {
+        let sudoku = r"
+            ..4...2..
+            76...3...
+            9.....75.
+            ...7.831.
+            .....9...
+            .321.68..
+            ..5.....8
+            ...9...34
+            ..7...1..
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        let strategy = NakedSingle::new();
+
+        assert_eq!(None, strategy.find(&sudoku));
     }
 }

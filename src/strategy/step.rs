@@ -2,7 +2,7 @@
 ///
 /// TODO refine this struct to accomodate most of the strategies
 ///
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Step {
     /// The cell index to set digit
     digit: Option<(usize, u8)>,

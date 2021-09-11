@@ -1,6 +1,13 @@
-use std::{convert::TryFrom, fmt::{self, Debug, Display}};
+use std::{
+    convert::TryFrom,
+    fmt::{self, Debug, Display},
+};
 
-use crate::{Candidates, Cell, parser::parse_sudoku, types::{BLOCKS, COLS, HOUSES, Pos, ROWS}};
+use crate::{
+    parser::parse_sudoku,
+    types::{Pos, BLOCKS, COLS, HOUSES, ROWS},
+    Candidates, Cell,
+};
 
 #[derive(Debug)]
 pub enum GridError {
@@ -39,7 +46,7 @@ impl fmt::Display for Sudoku {
                 match (row, col) {
                     (_, 3) | (_, 6) => write!(f, " ")?,
                     (3, 0) | (6, 0) => write!(f, "\n")?,
-                    (_, 0)          => write!(f, "\n")?,
+                    (_, 0) => write!(f, "\n")?,
                     _ => {}
                 }
                 write!(f, "{}", self.get(row, col).digit())?;
@@ -102,7 +109,10 @@ impl Sudoku {
     /// Create a new grid from a list of values
     pub fn new(fields: Vec<u8>) -> Result<Self, GridError> {
         if fields.len() != Self::NUM_FIELDS as usize {
-            return Err(GridError::Invalid(format!("Invalid number of fields - found {} elements", fields.len())));
+            return Err(GridError::Invalid(format!(
+                "Invalid number of fields - found {} elements",
+                fields.len()
+            )));
         }
 
         let cells: Result<Vec<_>, _> = fields
@@ -111,7 +121,10 @@ impl Sudoku {
             .map(|(index, value)| match value {
                 1..=9 => Ok(Cell::number(index, *value)),
                 0 => Ok(Cell::empty(index)),
-                v => Err(GridError::Invalid(format!("Digit must be between 0..=9, was {}", v))),
+                v => Err(GridError::Invalid(format!(
+                    "Digit must be between 0..=9, was {}",
+                    v
+                ))),
             })
             .collect();
 
@@ -128,11 +141,13 @@ impl Sudoku {
                 let index = col + row * Self::ROWS;
 
                 if self.cells[index as usize].is_empty() {
-                    let candidates = self.get_house(row, col)
-                        .fold(Candidates::all(), |mut candidates, neighbor| {
+                    let candidates = self.get_house(row, col).fold(
+                        Candidates::all(),
+                        |mut candidates, neighbor| {
                             candidates.unset(neighbor.digit());
                             candidates
-                        });
+                        },
+                    );
 
                     let cell = &mut self.cells[index as usize];
                     cell.set_candidates(candidates);
@@ -180,9 +195,12 @@ impl Sudoku {
     }
 
     /// Returns an iterator over all rows
-    #[inline(always)]
-    pub fn get_rows(&self) -> impl Iterator<Item = &[u8; 9]> {
-        ROWS.iter()
+    pub fn get_rows(&self) -> impl Iterator<Item = Vec<&Cell>> + '_ {
+        ROWS.iter().map(move |row| {
+            row.iter()
+                .map(|&index| self.get_by(index as usize))
+                .collect::<Vec<_>>()
+        })
     }
 
     /// Returns all fields for the given column
@@ -194,9 +212,12 @@ impl Sudoku {
     }
 
     /// Returns an iterator over all columns
-    #[inline(always)]
-    pub fn get_cols(&self) -> impl Iterator<Item = &[u8; 9]> {
-        COLS.iter()
+    pub fn get_cols(&self) -> impl Iterator<Item = Vec<&Cell>> + '_ {
+        COLS.iter().map(move |col| {
+            col.iter()
+                .map(|&index| self.get_by(index as usize))
+                .collect::<Vec<_>>()
+        })
     }
 
     /// Returns all fields from the given block
@@ -209,9 +230,13 @@ impl Sudoku {
     }
 
     /// Returns an iterator over all blocks
-    #[inline(always)]
-    pub fn get_blocks(&self) -> impl Iterator<Item = &[u8; 9]> {
-        BLOCKS.iter()
+    pub fn get_blocks(&self) -> impl Iterator<Item = Vec<&Cell>> + '_ {
+        BLOCKS.iter().map(move |block| {
+            block
+                .iter()
+                .map(|&index| self.get_by(index as usize))
+                .collect::<Vec<_>>()
+        })
     }
 
     /// Returns the house, all fields from same row, col and block
@@ -244,6 +269,7 @@ mod tests {
 
     use crate::sudoku::Sudoku;
 
+    #[rustfmt::skip]
     const SUDOKU: [u8; 81] = [
         5, 3, 0, 0, 7, 0, 0, 0, 0,
         6, 0, 0, 1, 9, 5, 0, 0, 0,
@@ -279,6 +305,7 @@ mod tests {
 
     #[test]
     fn create_sudoku_fails_with_wrong_numbers() {
+        #[rustfmt::skip]
         let numbers = vec![
             0, 0, 0, 0, 0, 0, 9, 8, 4,
             4, 0, 0, 8, 0, 0, 2, 5, 0,
@@ -300,6 +327,7 @@ mod tests {
 
     #[test]
     fn test_init_candidates() {
+        #[rustfmt::skip]
         let sudoku: Vec<u8> = vec![
             8, 0, 0, 7, 3, 9, 0, 0, 6,
             3, 7, 0, 4, 6, 5, 0, 0, 0,

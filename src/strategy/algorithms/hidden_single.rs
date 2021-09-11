@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{
-    strategy::{step::Step, Strategy},
-    Sudoku,
-};
+use crate::{Cell, Sudoku, strategy::{step::Step, Strategy}};
 
 #[derive(Debug)]
 pub struct HiddenSingle {}
@@ -13,21 +10,15 @@ impl HiddenSingle {
         Self {}
     }
 
-    fn find_single(sudoku: &Sudoku, cells: &[u8; 9]) -> Option<Step> {
-        let neighbors = cells
-            .iter()
-            .map(|&index| sudoku.get_by(index as usize))
-            .filter(|&cell| cell.is_empty())
-            .collect::<Vec<_>>();
-
+    fn find_single(sudoku: &Sudoku, cells: &Vec<&Cell>) -> Option<Step> {
         // Map all candidates to cells
-        let candidates = neighbors.iter().fold(HashMap::new(), |mut map, &cell| {
-            for candidate in cell.candidates().iter() {
+        let candidates = cells.iter().fold(HashMap::new(), |mut map, &cell| {
+            for candidate in cell.candidates_vec() {
                 if map.get(&candidate).is_none() {
                     map.insert(candidate, vec![]);
                 }
-                if let Some(entry) = map.get_mut(&candidate) {
-                    entry.push(cell.index());
+                if let Some(entries) = map.get_mut(&candidate) {
+                    entries.push(cell.index());
                 }
             }
             map
@@ -54,19 +45,19 @@ impl HiddenSingle {
 impl Strategy for HiddenSingle {
     fn find(&self, sudoku: &Sudoku) -> Option<Step> {
         for row in sudoku.get_rows() {
-            if let Some(step) = Self::find_single(sudoku, row) {
+            if let Some(step) = Self::find_single(sudoku, &row) {
                 return Some(step);
             }
         }
 
         for col in sudoku.get_cols() {
-            if let Some(step) = Self::find_single(sudoku, col) {
+            if let Some(step) = Self::find_single(sudoku, &col) {
                 return Some(step);
             }
         }
 
         for block in sudoku.get_blocks() {
-            if let Some(step) = Self::find_single(sudoku, block) {
+            if let Some(step) = Self::find_single(sudoku, &block) {
                 return Some(step);
             }
         }

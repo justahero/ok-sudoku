@@ -1,12 +1,15 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use bit_vec::BitVec;
 use itertools::Itertools;
 
-use crate::{Cell, Sudoku, strategy::{Strategy, step::Step}};
+use crate::{
+    strategy::{step::Step, Strategy},
+    Cell, Sudoku,
+};
 
 /// A Bit Vec indicating which indexes a candidate is in.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 struct IndexVec(BitVec);
 
 impl IndexVec {
@@ -17,11 +20,31 @@ impl IndexVec {
     pub fn set(&mut self, index: u8) {
         self.0.set(index as usize, true);
     }
+
+    /// Returns the number of set indexes
+    pub fn count(&self) -> u8 {
+        self.0.iter().filter(|v| *v).count() as u8
+    }
+
+    /// Returns an iterator over all indexes
+    pub fn iter(&self) -> impl Iterator<Item = u8> + '_ {
+        self.0
+            .iter()
+            .enumerate()
+            .filter(|(_index, v)| *v)
+            .map(|(index, _)| index as u8)
+    }
+}
+
+impl Debug for IndexVec {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.iter().join(", "))
+    }
 }
 
 #[derive(Debug)]
 pub struct HiddenSubset {
-    count: usize,
+    count: u8,
 }
 
 impl HiddenSubset {
@@ -43,11 +66,23 @@ impl HiddenSubset {
             map
         });
 
-        let group = candidates.iter().permutations(self.count).find(|entries| {
-            entries.iter().map(|(_, indexes)| indexes).all_equal()
-        });
+        // Find a group that has the same list of indexes
+        let group = candidates
+            .iter()
+            .filter(|(_index, indexes)| indexes.count() == self.count)
+            .permutations(self.count as usize)
+            .find(|entries| entries.iter().map(|(_, indexes)| indexes).all_equal());
 
-        dbg!(&group);
+        if let Some(group) = group {
+            // dbg!(&group);
+            let mut step = Step::new();
+            if let Some((_, indexes)) = group.first() {
+                indexes.iter().for_each(|index| {
+                    
+                });
+            }
+            return Some(step);
+        }
 
         None
     }
@@ -81,7 +116,7 @@ impl Strategy for HiddenSubset {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{Sudoku, strategy::Strategy};
+    use crate::{strategy::Strategy, Sudoku};
 
     use super::HiddenSubset;
 
@@ -106,8 +141,24 @@ mod tests {
 
         let step = strategy.find(&sudoku);
         assert!(step.is_some());
+        
+        let step = step.unwrap();
+        let expected_eliminated: Vec<(usize, u8)> = vec![
+            (0, 2),
+            (0, 3),
+            (0, 5),
+            (0, 8),
+            (0, 9),
+            (1, 1),
+            (1, 2),
+            (1, 3),
+            (1, 5),
+            (1, 8),
+        ];
+        assert_eq!(&expected_eliminated, step.eliminated_candidates());
     }
 
+    /// Example: http://hodoku.sourceforge.net/en/show_example.php?file=h201&tech=Hidden+Pair
     #[test]
     fn find_hidden_subset_pair() {
         let sudoku = r"
@@ -128,5 +179,11 @@ mod tests {
 
         let step = strategy.find(&sudoku);
         assert!(step.is_some());
+
+        let step = step.unwrap();
+        assert_eq!(
+            &vec![(44_usize, 6_u8)],
+            step.eliminated_candidates(),
+        );
     }
 }

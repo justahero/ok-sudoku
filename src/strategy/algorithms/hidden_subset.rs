@@ -21,6 +21,10 @@ impl IndexVec {
         self.0.set(index as usize, true);
     }
 
+    pub fn is_set(&self, index: u8) -> bool {
+        self.0.get(index as usize).is_some()
+    }
+
     /// Returns the number of set indexes
     pub fn count(&self) -> u8 {
         self.0.iter().filter(|v| *v).count() as u8
@@ -34,11 +38,18 @@ impl IndexVec {
             .filter(|(_index, v)| *v)
             .map(|(index, _)| index as u8)
     }
+
+    /// Returns the intersection of two bit sets
+    pub fn intersect(lhs: &Self, rhs: &Self) -> Self {
+        let mut lhs = lhs.clone();
+        lhs.0.and(&rhs.0);
+        lhs
+    }
 }
 
 impl Debug for IndexVec {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.iter().join(", "))
+        write!(f, "({})", self.iter().join(", "))
     }
 }
 
@@ -66,21 +77,52 @@ impl HiddenSubset {
             map
         });
 
-        // Find a group that has the same list of indexes
+        // Find a group that has the same list of indexes, still contains other candidates to hide within
         let group = candidates
             .iter()
             .filter(|(_index, indexes)| indexes.count() == self.count)
             .permutations(self.count as usize)
+            .filter(|entries| entries.len() <= self.count as usize)
             .find(|entries| entries.iter().map(|(_, indexes)| indexes).all_equal());
 
         if let Some(group) = group {
-            // dbg!(&group);
             let mut step = Step::new();
-            if let Some((_, indexes)) = group.first() {
-                indexes.iter().for_each(|index| {
-                    
+
+            // get indexes where hidden subset is found
+            let found_indexes = group[0].1;
+            let found_candidates = group.iter().map(|(&c, _)| c).collect::<Vec<_>>();
+
+            // remove all other candidates from the found indexes
+            candidates
+                .iter()
+                .filter(|(&c, _)| !found_candidates.contains(&c))
+                .for_each(|(&candidate, indexes)| {
+                    for index in IndexVec::intersect(indexes, found_indexes).iter() {
+                        step.eliminate_candidate(index as usize, candidate);
+                    }
                 });
-            }
+
+            /*
+            let candidates = candidates
+                .iter()
+                .filter(|(&c, _)| !found_candidates.contains(&c))
+                .collect::<Vec<_>>();
+
+            println!(":: CANDIDATES: {:?}", candidates);
+
+            found_indexes
+                .iter()
+                .for_each(|found_index| {
+                    println!(" -- FOUND INDEX: {}", found_index);
+                    for (&candidate, indexes) in candidates.iter() {
+                        println!(" --:: {} - {:?}", candidate, indexes);
+                        if indexes.is_set(found_index) {
+                            step.eliminate_candidate(found_index as usize, candidate);
+                        }
+                    }
+                });
+            */
+
             return Some(step);
         }
 
@@ -149,8 +191,8 @@ mod tests {
             (0, 5),
             (0, 8),
             (0, 9),
-            (1, 1),
             (1, 2),
+            (1, 1),
             (1, 3),
             (1, 5),
             (1, 8),

@@ -86,44 +86,30 @@ impl HiddenSubset {
             .find(|entries| entries.iter().map(|(_, indexes)| indexes).all_equal());
 
         if let Some(group) = group {
-            let mut step = Step::new();
-
             // get indexes where hidden subset is found
-            let found_indexes = group[0].1;
+            let found_indexes = group[0].1.iter().collect::<Vec<_>>();
             let found_candidates = group.iter().map(|(&c, _)| c).collect::<Vec<_>>();
 
-            // remove all other candidates from the found indexes
-            candidates
+            // get all sorted pairs of (index, candidate)
+            let candidates: Vec<(u8, u8)> = candidates
                 .iter()
-                .filter(|(&c, _)| !found_candidates.contains(&c))
-                .for_each(|(&candidate, indexes)| {
-                    for index in IndexVec::intersect(indexes, found_indexes).iter() {
-                        step.eliminate_candidate(index as usize, candidate);
-                    }
-                });
-
-            /*
-            let candidates = candidates
-                .iter()
-                .filter(|(&c, _)| !found_candidates.contains(&c))
+                .filter(|tuple| !found_candidates.contains(tuple.0))
+                .flat_map(|(&candidate, indexes)| {
+                    indexes.iter().map(move |index| (index, candidate))
+                })
+                .filter(|(index, _candidate)| found_indexes.contains(&index))
+                .sorted_by(|lhs, rhs| lhs.cmp(rhs))
                 .collect::<Vec<_>>();
 
-            println!(":: CANDIDATES: {:?}", candidates);
+            // let candidates = candidates.sort();
+            let mut step = Step::new();
+            for (index, candidate) in candidates.iter() {
+                step.eliminate_candidate((*index) as usize, *candidate);
+            }
 
-            found_indexes
-                .iter()
-                .for_each(|found_index| {
-                    println!(" -- FOUND INDEX: {}", found_index);
-                    for (&candidate, indexes) in candidates.iter() {
-                        println!(" --:: {} - {:?}", candidate, indexes);
-                        if indexes.is_set(found_index) {
-                            step.eliminate_candidate(found_index as usize, candidate);
-                        }
-                    }
-                });
-            */
-
-            return Some(step);
+            if !candidates.is_empty() {
+                return Some(step);
+            }
         }
 
         None
@@ -138,7 +124,7 @@ impl Strategy for HiddenSubset {
             }
         }
 
-        for col in sudoku.get_blocks() {
+        for col in sudoku.get_cols() {
             if let Some(step) = self.find_tuple(&col) {
                 return Some(step);
             }
@@ -183,7 +169,7 @@ mod tests {
 
         let step = strategy.find(&sudoku);
         assert!(step.is_some());
-        
+
         let step = step.unwrap();
         let expected_eliminated: Vec<(usize, u8)> = vec![
             (0, 2),
@@ -191,8 +177,8 @@ mod tests {
             (0, 5),
             (0, 8),
             (0, 9),
-            (1, 2),
             (1, 1),
+            (1, 2),
             (1, 3),
             (1, 5),
             (1, 8),
@@ -207,7 +193,7 @@ mod tests {
             .49132...
             .81479...
             327685914
-            .96.51.8.
+            .96.518..
             .75.28...
             .38.46..5
             853267...

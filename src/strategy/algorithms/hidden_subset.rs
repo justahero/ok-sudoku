@@ -63,6 +63,14 @@ impl HiddenSubset {
         Self { count: 2 }
     }
 
+    pub fn triple() -> Self {
+        Self { count: 3 }
+    }
+
+    pub fn quadruple() -> Self {
+        Self { count: 4 }
+    }
+
     fn find_tuple(&self, cells: &Vec<&Cell>) -> Option<Step> {
         // Map all candidates to cell indexes
         let candidates = cells.iter().fold(HashMap::new(), |mut map, &cell| {
@@ -94,14 +102,11 @@ impl HiddenSubset {
             let candidates: Vec<(u8, u8)> = candidates
                 .iter()
                 .filter(|tuple| !found_candidates.contains(tuple.0))
-                .flat_map(|(&candidate, indexes)| {
-                    indexes.iter().map(move |index| (index, candidate))
-                })
+                .flat_map(|(&candidate, indexes)| indexes.iter().map(move |index| (index, candidate)))
                 .filter(|(index, _candidate)| found_indexes.contains(&index))
                 .sorted_by(|lhs, rhs| lhs.cmp(rhs))
                 .collect::<Vec<_>>();
 
-            // let candidates = candidates.sort();
             let mut step = Step::new();
             for (index, candidate) in candidates.iter() {
                 step.eliminate_candidate((*index) as usize, *candidate);

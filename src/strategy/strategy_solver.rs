@@ -1,21 +1,18 @@
-use crate::{Sudoku, solver::SolverError};
+use crate::{Sudoku, solver::SolverError, types::Index};
 
 use super::{Strategy, algorithms::{HiddenSingle, HiddenSubset, NakedSingle, NakedSubset}, step::Step};
 
 /// The `StrategySolver` is the struct for solving Sudokus
 /// by applying logical strategies that humans can do.
 pub struct StrategySolver {
-    /// The initial Sudoku
-    _sudoku: Sudoku,
     /// List of all strategies
     strategies: Vec<Box<dyn Strategy>>,
 }
 
 impl StrategySolver {
     /// Creates a new Solver with a list of strategies
-    pub fn new(sudoku: &Sudoku) -> Self {
+    pub fn new() -> Self {
         let mut solver = StrategySolver {
-            _sudoku: sudoku.clone(),
             strategies: Vec::new(),
         };
         solver.add_default_strategies();
@@ -23,8 +20,23 @@ impl StrategySolver {
     }
 
     /// Solve the Sudoku by applying solving steps.
-    pub fn solve(&self) -> Result<(Sudoku, Vec<Step>), SolverError> {
-        todo!("")
+    pub fn solve(&self, sudoku: &Sudoku) -> Result<(Sudoku, Vec<Step>), SolverError> {
+        let mut sudoku = sudoku.clone();
+        let mut steps = vec![];
+
+        loop {
+            // TODO fix this logic here
+            if let Some(step) = self.strategies.iter().find_map(|strategy| strategy.find(&sudoku)) {
+                steps.push(step.clone());
+                self.apply(&step, &mut sudoku);
+            } else {
+                return Err(SolverError::Unsolvable);
+            }
+
+            if sudoku.is_solved() {
+                return Ok((sudoku, steps));
+            }
+        }
     }
 
     /// Adds all available default strategies
@@ -43,6 +55,17 @@ impl StrategySolver {
     pub fn push_strategy(&mut self, strategy: Box<dyn Strategy>) {
         self.strategies.push(strategy);
     }
+
+    /// Apply the step
+    /// TODO return Result with SolverError
+    pub fn apply(&self, step: &Step, sudoku: &mut Sudoku) {
+        for (index, candidate) in step.eliminated_candidates() {
+            sudoku.get_by_mut(*index).unset_candidate(*candidate);
+        }
+        if let Some((index, digit)) = step.digit() {
+            sudoku.set_by(*index, *digit);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -56,14 +79,26 @@ mod tests {
     #[test]
     fn solve_sudokus() {
         // A few sudokus found here: https://sandiway.arizona.edu/sudoku/examples.html
+        #[rustfmt::skip]
         let sudokus = vec![
-            r"...26.7.1 68..7..9. 19...45.. 82.1...4. ..46.29.. .5...3.28 ..93...74 .4..5..36 7.3.18...",
+            r"...26.7.168..7..9.19...45..82.1...4...46.29...5...3.28..93...74.4..5..367.3.18...",
         ];
 
-        for s in sudokus {
-            let sudoku = Sudoku::try_from(s).unwrap();
-            let _solver = StrategySolver::new(&sudoku);
-            // assert!(solver.solve().is_ok());
+        #[rustfmt::skip]
+        let solutions = vec![
+            r"435269781 682571493 197834562 826195347 374682915 951743628 519326874 248957136 763418259",
+        ];
+
+        let solver = StrategySolver::new();
+
+        for (&sudoku, solution) in sudokus.iter().zip(solutions) {
+            let sudoku = Sudoku::try_from(sudoku).unwrap();
+            let solution = Sudoku::try_from(solution).unwrap();
+
+            let actual = solver.solve(&sudoku);
+            assert!(actual.is_ok());
+            let (actual, _steps) = actual.unwrap();
+            assert_eq!(solution, actual);
         }
     }
 }

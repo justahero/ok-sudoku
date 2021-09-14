@@ -34,6 +34,17 @@ impl CellState {
         }
     }
 
+    /// Unsets the candidate from this Cell, returns true if unset
+    pub fn unset_candidate(&mut self, candidate: u8) -> bool {
+        match self {
+            CellState::Candidates(candidates) => {
+                candidates.unset(candidate);
+                true
+            }
+            CellState::Number(_) => false,
+        }
+    }
+
     /// Sets the list of candidates
     pub fn set_candidates(&mut self, candidates: Candidates) {
         *self = CellState::Candidates(candidates);
@@ -120,6 +131,11 @@ impl Cell {
     /// Sets the list of candidates
     pub fn set_candidates(&mut self, candidates: Candidates) {
         self.state.set_candidates(candidates);
+    }
+
+    /// Unsets a single candidate from the cell, returns true if successful
+    pub fn unset_candidate(&mut self, candidate: u8) -> bool {
+        self.state.unset_candidate(candidate)
     }
 
     /// Returns the list of candidates if available

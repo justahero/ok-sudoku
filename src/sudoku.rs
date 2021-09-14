@@ -162,6 +162,12 @@ impl Sudoku {
         &self.cells[index]
     }
 
+    /// Returns a mutable reference to the cell given by index
+    #[inline(always)]
+    pub fn get_by_mut(&mut self, index: usize) -> &mut Cell {
+        &mut self.cells[index]
+    }
+
     /// Returns the cell given by coordinates
     pub fn get(&self, row: u8, col: u8) -> &Cell {
         let index = col + row * Self::ROWS;
@@ -172,6 +178,11 @@ impl Sudoku {
     pub fn set(&mut self, row: u8, col: u8, digit: u8) {
         let index = col + row * Self::ROWS;
         self.cells[index as usize].set_digit(digit);
+    }
+
+    /// Sets the value of a specifc cell given by index
+    pub fn set_by(&mut self, index: usize, digit: u8) {
+        self.cells[index].set_digit(digit);
     }
 
     /// Unsets the cell at given coordinates

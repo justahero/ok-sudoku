@@ -64,6 +64,10 @@ impl Strategy for HiddenSingle {
 
         None
     }
+
+    fn name(&self) -> String {
+        String::from("Hidden Single")
+    }
 }
 
 #[cfg(test)]

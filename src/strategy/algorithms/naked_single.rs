@@ -22,6 +22,10 @@ impl Strategy for NakedSingle {
             step
         })
     }
+
+    fn name(&self) -> String {
+        String::from("Naked Single")
+    }
 }
 
 #[cfg(test)]
@@ -54,6 +58,20 @@ mod tests {
         let step = strategy.find(&sudoku).unwrap();
         assert!(step.has_digit());
         assert_eq!((20_usize, 5_u8), *step.digit().unwrap());
+    }
+
+    #[test]
+    fn find_naked_single_examples() {
+        let sudokus = [
+            r"...26.7.1 68..7..9. 19...45.. 82.1...4 ...46.29. ..5...3.2 8..93... 74.4..5.. 367.3.18..."
+        ];
+
+        let strategy = NakedSingle::new();
+        for &sudoku in sudokus.iter() {
+            let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+            sudoku.init_candidates();
+            assert!(strategy.find(&sudoku).is_some());
+        }
     }
 
     /// Example Expert #18 from Good Sudoku

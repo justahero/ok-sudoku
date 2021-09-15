@@ -1,6 +1,10 @@
-use crate::{Sudoku, solver::SolverError, types::Index};
+use crate::{solver::SolverError, Sudoku};
 
-use super::{Strategy, algorithms::{HiddenSingle, HiddenSubset, NakedSingle, NakedSubset}, step::Step};
+use super::{
+    algorithms::{HiddenSingle, HiddenSubset, NakedSingle, NakedSubset},
+    step::Step,
+    Strategy,
+};
 
 /// The `StrategySolver` is the struct for solving Sudokus
 /// by applying logical strategies that humans can do.
@@ -22,11 +26,16 @@ impl StrategySolver {
     /// Solve the Sudoku by applying solving steps.
     pub fn solve(&self, sudoku: &Sudoku) -> Result<(Sudoku, Vec<Step>), SolverError> {
         let mut sudoku = sudoku.clone();
+        sudoku.init_candidates();
         let mut steps = vec![];
 
         loop {
-            // TODO fix this logic here
-            if let Some(step) = self.strategies.iter().find_map(|strategy| strategy.find(&sudoku)) {
+            if let Some((strategy, step)) = self
+                .strategies
+                .iter()
+                .find_map(|strategy| strategy.find(&sudoku).map(|step| (strategy, step)))
+            {
+                println!("STRATEGY: {:?}, STEP: {:?}", strategy.name(), step);
                 steps.push(step.clone());
                 self.apply(&step, &mut sudoku);
             } else {
@@ -81,7 +90,8 @@ mod tests {
         // A few sudokus found here: https://sandiway.arizona.edu/sudoku/examples.html
         #[rustfmt::skip]
         let sudokus = vec![
-            r"...26.7.168..7..9.19...45..82.1...4...46.29...5...3.28..93...74.4..5..367.3.18...",
+            // TODO fix the solution of this one, looks like HiddenSingle is incorrect
+            r"...26.7.1 68..7..9. 19...45.. 82.1...4 ...46.29. ..5...3.2 8..93... 74.4..5.. 367.3.18...",
         ];
 
         #[rustfmt::skip]
@@ -97,7 +107,7 @@ mod tests {
 
             let actual = solver.solve(&sudoku);
             assert!(actual.is_ok());
-            let (actual, _steps) = actual.unwrap();
+            let (actual, _) = actual.unwrap();
             assert_eq!(solution, actual);
         }
     }

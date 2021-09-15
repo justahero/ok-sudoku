@@ -87,6 +87,10 @@ impl Strategy for NakedSubset {
 
         None
     }
+
+    fn name(&self) -> String {
+        format!("Naked Subset ({})", self.count)
+    }
 }
 
 #[cfg(test)]

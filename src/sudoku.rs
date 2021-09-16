@@ -41,16 +41,17 @@ impl Debug for Sudoku {
 
 impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for row in 0..Self::ROWS {
-            for col in 0..Self::COLS {
-                match (row, col) {
-                    (_, 3) | (_, 6) => write!(f, " ")?,
-                    (3, 0) | (6, 0) => write!(f, "\n")?,
-                    (_, 0) => write!(f, "\n")?,
-                    _ => {}
-                }
-                write!(f, "{}", self.get(row, col).digit())?;
+        for index in 0..Self::NUM_FIELDS {
+            let row = index as u8 / Sudoku::ROWS;
+            let col = index as u8 % Sudoku::COLS;
+
+            match (row, col) {
+                (_, 3) | (_, 6) => write!(f, " ")?,
+                (3, 0) | (6, 0) => write!(f, "\n")?,
+                (_, 0) => write!(f, "\n")?,
+                _ => {}
             }
+            write!(f, "{}", self.get(index).digit())?;
         }
         Ok(())
     }
@@ -158,30 +159,18 @@ impl Sudoku {
 
     /// Returns the cell given by index
     #[inline(always)]
-    pub fn get_by(&self, index: usize) -> &Cell {
+    pub fn get(&self, index: usize) -> &Cell {
         &self.cells[index]
     }
 
     /// Returns a mutable reference to the cell given by index
     #[inline(always)]
-    pub fn get_by_mut(&mut self, index: usize) -> &mut Cell {
+    pub fn get_mut(&mut self, index: usize) -> &mut Cell {
         &mut self.cells[index]
     }
 
-    /// Returns the cell given by coordinates
-    pub fn get(&self, row: u8, col: u8) -> &Cell {
-        let index = col + row * Self::ROWS;
-        &self.cells[index as usize]
-    }
-
-    /// Sets the value of a specific cell given by coordinates
-    pub fn set(&mut self, row: u8, col: u8, digit: u8) {
-        let index = col + row * Self::ROWS;
-        self.cells[index as usize].set_digit(digit);
-    }
-
     /// Sets the value of a specifc cell given by index
-    pub fn set_by(&mut self, index: usize, digit: u8) {
+    pub fn set_digit(&mut self, index: usize, digit: u8) {
         self.cells[index].set_digit(digit);
     }
 
@@ -208,7 +197,7 @@ impl Sudoku {
     pub fn get_rows(&self) -> impl Iterator<Item = Vec<&Cell>> + '_ {
         ROWS.iter().map(move |row| {
             row.iter()
-                .map(|&index| self.get_by(index as usize))
+                .map(|&index| self.get(index as usize))
                 .collect::<Vec<_>>()
         })
     }
@@ -225,7 +214,7 @@ impl Sudoku {
     pub fn get_cols(&self) -> impl Iterator<Item = Vec<&Cell>> + '_ {
         COLS.iter().map(move |col| {
             col.iter()
-                .map(|&index| self.get_by(index as usize))
+                .map(|&index| &self.cells[index as usize])
                 .collect::<Vec<_>>()
         })
     }
@@ -244,7 +233,7 @@ impl Sudoku {
         BLOCKS.iter().map(move |block| {
             block
                 .iter()
-                .map(|&index| self.get_by(index as usize))
+                .map(|&index| &self.cells[index as usize])
                 .collect::<Vec<_>>()
         })
     }
@@ -352,7 +341,7 @@ mod tests {
         let mut sudoku = Sudoku::new(sudoku).unwrap();
         sudoku.init_candidates();
 
-        let c = sudoku.get(0, 1).candidates();
+        let c = sudoku.get(1).candidates();
 
         assert_eq!(2, c.count());
         assert_eq!(vec![1u8, 2], c.iter().collect::<Vec<_>>());

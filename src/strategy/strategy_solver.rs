@@ -69,10 +69,10 @@ impl StrategySolver {
     /// TODO return Result with SolverError
     pub fn apply(&self, step: &Step, sudoku: &mut Sudoku) {
         for (index, candidate) in step.eliminated_candidates() {
-            sudoku.get_by_mut(*index).unset_candidate(*candidate);
+            sudoku.get_mut(*index).unset_candidate(*candidate);
         }
         if let Some((index, digit)) = step.digit() {
-            sudoku.set_by(*index, *digit);
+            sudoku.set_digit(*index, *digit);
         }
     }
 }

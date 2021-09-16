@@ -18,21 +18,25 @@ impl Candidates {
     }
 
     /// Returns true if the candidates set is empty
+    #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
     /// Sets the given candidate
+    #[inline(always)]
     pub fn set(&mut self, candidate: u8) {
         self.0.set(candidate as usize, true);
     }
 
     /// Unsets the given candidate
+    #[inline(always)]
     pub fn unset(&mut self, candidate: u8) {
         self.0.set(candidate as usize, false);
     }
 
     /// Returns true if candidate is set
+    #[inline(always)]
     pub fn get(&self, candidate: u8) -> bool {
         self.0.get(candidate as usize).unwrap_or(false)
     }
@@ -47,6 +51,7 @@ impl Candidates {
     }
 
     /// Returns the number of set candidates
+    #[inline(always)]
     pub fn count(&self) -> usize {
         self.0.iter().filter(|v| *v).count()
     }

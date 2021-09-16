@@ -64,10 +64,10 @@ impl Solver {
 
         // TODO find a way to not start from front
         for index in 0..Sudoku::NUM_FIELDS {
-            if sudoku.get_by(index).is_empty() {
+            if sudoku.get(index).is_empty() {
                 for value in 1..=9 {
                     if Self::possible(&sudoku, index, value) {
-                        sudoku.set_by(index, value);
+                        sudoku.set_digit(index, value);
                         self.solve_sudoku(sudoku);
                         sudoku.unset(index);
                     }

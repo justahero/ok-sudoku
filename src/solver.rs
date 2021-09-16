@@ -63,26 +63,24 @@ impl Solver {
         }
 
         // TODO find a way to not start from front
-        for row in 0..Sudoku::ROWS {
-            for col in 0..Sudoku::COLS {
-                if sudoku.get(row, col).is_empty() {
-                    for value in 1..=9 {
-                        if Self::possible(&sudoku, row, col, value) {
-                            sudoku.set(row, col, value);
-                            self.solve_sudoku(sudoku);
-                            sudoku.unset(row, col);
-                        }
+        for index in 0..Sudoku::NUM_FIELDS {
+            if sudoku.get_by(index).is_empty() {
+                for value in 1..=9 {
+                    if Self::possible(&sudoku, index, value) {
+                        sudoku.set_by(index, value);
+                        self.solve_sudoku(sudoku);
+                        sudoku.unset(index);
                     }
-                    // unwind when no candidate were found
-                    return;
                 }
+                // unwind when no candidate were found
+                return;
             }
         }
     }
 
     /// Slow check if the given value for field row, col can be set
-    fn possible(sudoku: &Sudoku, row: u8, col: u8, value: u8) -> bool {
-        sudoku.get_house(row, col).find(|cell| cell.digit() == value).is_none()
+    fn possible(sudoku: &Sudoku, index: usize, value: u8) -> bool {
+        sudoku.get_house(index).find(|cell| cell.digit() == value).is_none()
     }
 
     /// Returns the list of solutions

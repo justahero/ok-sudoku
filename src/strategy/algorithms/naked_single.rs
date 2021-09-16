@@ -11,14 +11,22 @@ impl NakedSingle {
 
 impl Strategy for NakedSingle {
     fn find(&self, sudoku: &Sudoku) -> Option<Step> {
-        let result = sudoku
+        let naked_single = sudoku
             .iter()
             .find(|cell| cell.candidates().count() == 1);
 
-        result.map(|cell| {
+        naked_single.map(|cell| {
             let candidate = cell.candidates_vec()[0];
             let mut step = Step::new();
             step.set_digit(cell.index(), candidate);
+
+            // remove the digit from neighbors in same house
+            for neighbor in sudoku.get_house(cell.index()) {
+                if neighbor.candidates().get(candidate) {
+                    step.eliminate_candidate(neighbor.index(), candidate);
+                }
+            }
+
             step
         })
     }
@@ -56,22 +64,35 @@ mod tests {
         let strategy = NakedSingle::new();
 
         let step = strategy.find(&sudoku).unwrap();
-        assert!(step.has_digit());
-        assert_eq!((20_usize, 5_u8), *step.digit().unwrap());
+
+        assert_eq!(Some(&(20_usize, 5_u8)), step.digit());
     }
 
     #[test]
-    fn find_naked_single_examples() {
-        let sudokus = [
-            r"...26.7.1 68..7..9. 19...45.. 82.1...4 ...46.29. ..5...3.2 8..93... 74.4..5.. 367.3.18..."
-        ];
+    fn find_another_naked_single() {
+        let sudoku = r"
+            ...26.7.1
+            68..7..9.
+            19...45..
+            82.1...4
+            ...46.29.
+            ..5...3.2
+            8..93...
+            74.4..5..
+            367.3.18...
+        ";
 
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
         let strategy = NakedSingle::new();
-        for &sudoku in sudokus.iter() {
-            let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-            sudoku.init_candidates();
-            assert!(strategy.find(&sudoku).is_some());
-        }
+
+        let step = strategy.find(&sudoku).unwrap();
+
+        assert_eq!(Some(&(1_usize, 3u8)), step.digit());
+        assert_eq!(
+            &vec![(0_usize, 3_u8), (37_usize, 3_u8)],
+            step.eliminated_candidates(),
+        );
     }
 
     /// Example Expert #18 from Good Sudoku

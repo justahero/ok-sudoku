@@ -91,7 +91,7 @@ impl CellState {
 }
 
 /// A single cell on the Sudoku grid with index and state
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Cell {
     /// The index on the Sudoku board for convenvience
     /// See `Sudoku` for details on the board.

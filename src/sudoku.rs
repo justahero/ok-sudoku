@@ -104,7 +104,7 @@ impl Sudoku {
     pub const BLOCK_SIZE: u8 = 3;
     pub const ROWS: u8 = 9;
     pub const COLS: u8 = 9;
-    pub const NUM_FIELDS: u32 = 81;
+    pub const NUM_FIELDS: usize = 81;
 
     /// Create a new grid from a list of values
     pub fn new(fields: Vec<u8>) -> Result<Self, GridError> {
@@ -138,10 +138,10 @@ impl Sudoku {
     pub fn init_candidates(&mut self) {
         for row in 0..9 {
             for col in 0..9 {
-                let index = col + row * Self::ROWS;
+                let index = (col + row * Self::ROWS) as usize;
 
-                if self.cells[index as usize].is_empty() {
-                    let candidates = self.get_house(row, col).fold(
+                if self.cells[index].is_empty() {
+                    let candidates = self.get_house(index).fold(
                         Candidates::all(),
                         |mut candidates, neighbor| {
                             candidates.unset(neighbor.digit());
@@ -149,7 +149,7 @@ impl Sudoku {
                         },
                     );
 
-                    let cell = &mut self.cells[index as usize];
+                    let cell = &mut self.cells[index];
                     cell.set_candidates(candidates);
                 }
             }
@@ -186,9 +186,8 @@ impl Sudoku {
     }
 
     /// Unsets the cell at given coordinates
-    pub fn unset(&mut self, row: u8, col: u8) {
-        let index = col + row * Self::ROWS;
-        self.cells[index as usize].unset();
+    pub fn unset(&mut self, index: usize) {
+        self.cells[index].unset();
     }
 
     /// Naive version to check if Sudoku is solved
@@ -251,9 +250,8 @@ impl Sudoku {
     }
 
     /// Returns the house, all fields from same row, col and block
-    pub fn get_house(&self, row: u8, col: u8) -> impl Iterator<Item = &Cell> + '_ {
-        let index = col + row * Self::ROWS;
-        let indices = &HOUSES[index as usize];
+    pub fn get_house(&self, index: usize) -> impl Iterator<Item = &Cell> + '_ {
+        let indices = &HOUSES[index];
         indices
             .iter()
             .map(move |&index| &self.cells[index as usize])

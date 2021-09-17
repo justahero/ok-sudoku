@@ -137,22 +137,24 @@ impl Sudoku {
     /// **Note** this will not check or validate the candidates
     ///
     pub fn init_candidates(&mut self) {
-        for row in 0..9 {
-            for col in 0..9 {
-                let index = (col + row * Self::ROWS) as usize;
-
-                if self.cells[index].is_empty() {
-                    let candidates = self.get_house(index).fold(
-                        Candidates::all(),
-                        |mut candidates, neighbor| {
+        println!("INIT CANDIDATES");
+        for index in 0..Self::NUM_FIELDS {
+            if self.cells[index].is_empty() {
+                let neighbors = self.get_house(index);
+                let candidates = neighbors.fold(
+                    Candidates::all(),
+                    |mut candidates, neighbor| {
+                        if neighbor.is_digit() {
+                            println!("--- UNSET: {} - {}", neighbor.index(), neighbor.digit());
                             candidates.unset(neighbor.digit());
-                            candidates
-                        },
-                    );
+                        }
+                        candidates
+                    },
+                );
 
-                    let cell = &mut self.cells[index];
-                    cell.set_candidates(candidates);
-                }
+                println!(" :: {} - candidates: {:?}", index, candidates);
+                let cell = &mut self.cells[index];
+                cell.set_candidates(candidates);
             }
         }
     }

@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     parser::parse_sudoku,
-    types::{Pos, BLOCKS, COLS, HOUSES, ROWS},
+    types::{BLOCKS, COLS, HOUSES, ROWS},
     Candidates, Cell,
 };
 
@@ -137,7 +137,6 @@ impl Sudoku {
     /// **Note** this will not check or validate the candidates
     ///
     pub fn init_candidates(&mut self) {
-        println!("INIT CANDIDATES");
         for index in 0..Self::NUM_FIELDS {
             if self.cells[index].is_empty() {
                 let neighbors = self.get_house(index);
@@ -145,14 +144,12 @@ impl Sudoku {
                     Candidates::all(),
                     |mut candidates, neighbor| {
                         if neighbor.is_digit() {
-                            println!("--- UNSET: {} - {}", neighbor.index(), neighbor.digit());
                             candidates.unset(neighbor.digit());
                         }
                         candidates
                     },
                 );
 
-                println!(" :: {} - candidates: {:?}", index, candidates);
                 let cell = &mut self.cells[index];
                 cell.set_candidates(candidates);
             }
@@ -222,9 +219,8 @@ impl Sudoku {
     }
 
     /// Returns all fields from the given block
-    pub fn get_block(&self, row: u8, col: u8) -> impl Iterator<Item = &Cell> + '_ {
-        let index = Pos::new(row, col).block();
-        let indices = &BLOCKS[index as usize];
+    pub fn get_block(&self, index: usize) -> impl Iterator<Item = &Cell> + '_ {
+        let indices = &BLOCKS[index];
         indices
             .iter()
             .map(move |&index| &self.cells[index as usize])

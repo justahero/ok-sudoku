@@ -21,10 +21,6 @@ impl IndexVec {
         self.0.set(index as usize, true);
     }
 
-    pub fn is_set(&self, index: u8) -> bool {
-        self.0.get(index as usize).is_some()
-    }
-
     /// Returns the number of set indexes
     pub fn count(&self) -> u8 {
         self.0.iter().filter(|v| *v).count() as u8
@@ -37,13 +33,6 @@ impl IndexVec {
             .enumerate()
             .filter(|(_index, v)| *v)
             .map(|(index, _)| index as u8)
-    }
-
-    /// Returns the intersection of two bit sets
-    pub fn intersect(lhs: &Self, rhs: &Self) -> Self {
-        let mut lhs = lhs.clone();
-        lhs.0.and(&rhs.0);
-        lhs
     }
 }
 

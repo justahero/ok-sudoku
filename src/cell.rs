@@ -34,6 +34,14 @@ impl CellState {
         }
     }
 
+    /// Returns true if the state contains this candidate
+    pub fn has_candidate(&self, candidate: u8) -> bool {
+        if let CellState::Candidates(candidates) = self {
+            return candidates.get(candidate)
+        }
+        false
+    }
+
     /// Unsets the candidate from this Cell, returns true if unset
     pub fn unset_candidate(&mut self, candidate: u8) -> bool {
         match self {
@@ -91,7 +99,7 @@ impl CellState {
 }
 
 /// A single cell on the Sudoku grid with index and state
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Cell {
     /// The index on the Sudoku board for convenvience
     /// See `Sudoku` for details on the board.
@@ -126,6 +134,11 @@ impl Cell {
     /// Returns the digit value of the cell, either 1-9 or 0 if unset
     pub fn digit(&self) -> u8 {
         self.state.digit()
+    }
+
+    /// Returns true if this cell contains this candidate
+    pub fn has_candidate(&self, candidate: u8) -> bool {
+        self.state.has_candidate(candidate)
     }
 
     /// Sets the list of candidates

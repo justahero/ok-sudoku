@@ -41,16 +41,17 @@ impl Debug for Sudoku {
 
 impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for row in 0..Self::ROWS {
-            for col in 0..Self::COLS {
-                match (row, col) {
-                    (_, 3) | (_, 6) => write!(f, " ")?,
-                    (3, 0) | (6, 0) => write!(f, "\n")?,
-                    (_, 0) => write!(f, "\n")?,
-                    _ => {}
-                }
-                write!(f, "{}", self.get(row, col).digit())?;
+        for index in 0..Self::NUM_FIELDS {
+            let row = index as u8 / Sudoku::ROWS;
+            let col = index as u8 % Sudoku::COLS;
+
+            match (row, col) {
+                (_, 3) | (_, 6) => write!(f, " ")?,
+                (3, 0) | (6, 0) => write!(f, "\n")?,
+                (_, 0) => write!(f, "\n")?,
+                _ => {}
             }
+            write!(f, "{}", self.get(index).digit())?;
         }
         Ok(())
     }
@@ -104,7 +105,7 @@ impl Sudoku {
     pub const BLOCK_SIZE: u8 = 3;
     pub const ROWS: u8 = 9;
     pub const COLS: u8 = 9;
-    pub const NUM_FIELDS: u32 = 81;
+    pub const NUM_FIELDS: usize = 81;
 
     /// Create a new grid from a list of values
     pub fn new(fields: Vec<u8>) -> Result<Self, GridError> {
@@ -138,10 +139,10 @@ impl Sudoku {
     pub fn init_candidates(&mut self) {
         for row in 0..9 {
             for col in 0..9 {
-                let index = col + row * Self::ROWS;
+                let index = (col + row * Self::ROWS) as usize;
 
-                if self.cells[index as usize].is_empty() {
-                    let candidates = self.get_house(row, col).fold(
+                if self.cells[index].is_empty() {
+                    let candidates = self.get_house(index).fold(
                         Candidates::all(),
                         |mut candidates, neighbor| {
                             candidates.unset(neighbor.digit());
@@ -149,7 +150,7 @@ impl Sudoku {
                         },
                     );
 
-                    let cell = &mut self.cells[index as usize];
+                    let cell = &mut self.cells[index];
                     cell.set_candidates(candidates);
                 }
             }
@@ -158,37 +159,24 @@ impl Sudoku {
 
     /// Returns the cell given by index
     #[inline(always)]
-    pub fn get_by(&self, index: usize) -> &Cell {
+    pub fn get(&self, index: usize) -> &Cell {
         &self.cells[index]
     }
 
     /// Returns a mutable reference to the cell given by index
     #[inline(always)]
-    pub fn get_by_mut(&mut self, index: usize) -> &mut Cell {
+    pub fn get_mut(&mut self, index: usize) -> &mut Cell {
         &mut self.cells[index]
     }
 
-    /// Returns the cell given by coordinates
-    pub fn get(&self, row: u8, col: u8) -> &Cell {
-        let index = col + row * Self::ROWS;
-        &self.cells[index as usize]
-    }
-
-    /// Sets the value of a specific cell given by coordinates
-    pub fn set(&mut self, row: u8, col: u8, digit: u8) {
-        let index = col + row * Self::ROWS;
-        self.cells[index as usize].set_digit(digit);
-    }
-
     /// Sets the value of a specifc cell given by index
-    pub fn set_by(&mut self, index: usize, digit: u8) {
+    pub fn set_digit(&mut self, index: usize, digit: u8) {
         self.cells[index].set_digit(digit);
     }
 
     /// Unsets the cell at given coordinates
-    pub fn unset(&mut self, row: u8, col: u8) {
-        let index = col + row * Self::ROWS;
-        self.cells[index as usize].unset();
+    pub fn unset(&mut self, index: usize) {
+        self.cells[index].unset();
     }
 
     /// Naive version to check if Sudoku is solved
@@ -209,7 +197,7 @@ impl Sudoku {
     pub fn get_rows(&self) -> impl Iterator<Item = Vec<&Cell>> + '_ {
         ROWS.iter().map(move |row| {
             row.iter()
-                .map(|&index| self.get_by(index as usize))
+                .map(|&index| self.get(index as usize))
                 .collect::<Vec<_>>()
         })
     }
@@ -226,7 +214,7 @@ impl Sudoku {
     pub fn get_cols(&self) -> impl Iterator<Item = Vec<&Cell>> + '_ {
         COLS.iter().map(move |col| {
             col.iter()
-                .map(|&index| self.get_by(index as usize))
+                .map(|&index| &self.cells[index as usize])
                 .collect::<Vec<_>>()
         })
     }
@@ -245,15 +233,14 @@ impl Sudoku {
         BLOCKS.iter().map(move |block| {
             block
                 .iter()
-                .map(|&index| self.get_by(index as usize))
+                .map(|&index| &self.cells[index as usize])
                 .collect::<Vec<_>>()
         })
     }
 
     /// Returns the house, all fields from same row, col and block
-    pub fn get_house(&self, row: u8, col: u8) -> impl Iterator<Item = &Cell> + '_ {
-        let index = col + row * Self::ROWS;
-        let indices = &HOUSES[index as usize];
+    pub fn get_house(&self, index: usize) -> impl Iterator<Item = &Cell> + '_ {
+        let indices = &HOUSES[index];
         indices
             .iter()
             .map(move |&index| &self.cells[index as usize])
@@ -354,7 +341,7 @@ mod tests {
         let mut sudoku = Sudoku::new(sudoku).unwrap();
         sudoku.init_candidates();
 
-        let c = sudoku.get(0, 1).candidates();
+        let c = sudoku.get(1).candidates();
 
         assert_eq!(2, c.count());
         assert_eq!(vec![1u8, 2], c.iter().collect::<Vec<_>>());

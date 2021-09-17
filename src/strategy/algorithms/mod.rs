@@ -2,6 +2,7 @@ mod hidden_single;
 mod naked_single;
 mod naked_subset;
 mod hidden_subset;
+mod locked_candidate;
 
 pub(crate) use hidden_single::HiddenSingle;
 pub(crate) use hidden_subset::HiddenSubset;

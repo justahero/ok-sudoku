@@ -1,9 +1,9 @@
 use crate::Candidates;
 
-/// A single cell on the board with either a digit or a list of candidates
+/// The state of single cell on the board with either a digit or a list of candidates
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CellState {
-    /// A specific set number
+    /// A specific set digit
     Number(u8),
     /// A set of candidates
     Candidates(Candidates),
@@ -31,6 +31,17 @@ impl CellState {
         match self {
             CellState::Candidates(_) => 0,
             CellState::Number(digit) => *digit,
+        }
+    }
+
+    /// Unsets the candidate from this Cell, returns true if unset
+    pub fn unset_candidate(&mut self, candidate: u8) -> bool {
+        match self {
+            CellState::Candidates(candidates) => {
+                candidates.unset(candidate);
+                true
+            }
+            CellState::Number(_) => false,
         }
     }
 
@@ -120,6 +131,11 @@ impl Cell {
     /// Sets the list of candidates
     pub fn set_candidates(&mut self, candidates: Candidates) {
         self.state.set_candidates(candidates);
+    }
+
+    /// Unsets a single candidate from the cell, returns true if successful
+    pub fn unset_candidate(&mut self, candidate: u8) -> bool {
+        self.state.unset_candidate(candidate)
     }
 
     /// Returns the list of candidates if available

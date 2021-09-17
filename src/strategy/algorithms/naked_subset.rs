@@ -1,16 +1,13 @@
 use itertools::Itertools;
 
-use crate::{
-    strategy::{step::Step, Strategy},
-    Candidates, Sudoku,
-};
+use crate::{Candidates, Cell, Sudoku, strategy::{step::Step, Strategy}};
 
 #[derive(Debug)]
 pub struct NakedSubset {
     count: usize,
 }
 
-impl<'a> NakedSubset {
+impl NakedSubset {
     /// Create a new Naked Subset for pairs of 2
     pub fn pair() -> Self {
         Self { count: 2 }
@@ -26,11 +23,11 @@ impl<'a> NakedSubset {
         Self { count: 4 }
     }
 
-    fn find_tuple(&self, sudoku: &Sudoku, cells: &[u8; 9]) -> Option<Step> {
+    fn find_tuple(&self, cells: &Vec<&Cell>) -> Option<Step> {
         // get all neighbors, cells that have only candidates
         let neighbors = cells
             .iter()
-            .filter(|&index| sudoku.get_by(*index as usize).is_empty())
+            .filter(|&cell| cell.is_empty())
             .collect::<Vec<_>>();
 
         // for all available neighbors check if there is a naked subset
@@ -38,8 +35,8 @@ impl<'a> NakedSubset {
             for group in neighbors.iter().permutations(self.count) {
                 let subset = group
                     .iter()
-                    .fold(Candidates::empty(), |mut candidates, &&index| {
-                        candidates |= sudoku.get_by(*index as usize).candidates();
+                    .fold(Candidates::empty(), |mut candidates, &&cell| {
+                        candidates |= cell.candidates();
                         candidates
                     });
 
@@ -51,10 +48,10 @@ impl<'a> NakedSubset {
                     neighbors
                         .iter()
                         .filter(|index| !group.contains(index))
-                        .for_each(|&&index| {
+                        .for_each(|&&cell| {
                             for c in subset.iter() {
-                                if sudoku.get_by(index as usize).candidates().get(c) {
-                                    step.eliminate_candidate(index as usize, c);
+                                if cell.candidates().get(c) {
+                                    step.eliminate_candidate(cell.index(), c);
                                 }
                             }
                         });
@@ -71,24 +68,28 @@ impl<'a> NakedSubset {
 impl Strategy for NakedSubset {
     fn find(&self, sudoku: &Sudoku) -> Option<Step> {
         for row in sudoku.get_rows() {
-            if let Some(step) = self.find_tuple(sudoku, row) {
+            if let Some(step) = self.find_tuple(&row) {
                 return Some(step);
             }
         }
 
         for col in sudoku.get_cols() {
-            if let Some(step) = self.find_tuple(sudoku, col) {
+            if let Some(step) = self.find_tuple(&col) {
                 return Some(step);
             }
         }
 
         for block in sudoku.get_blocks() {
-            if let Some(step) = self.find_tuple(sudoku, block) {
+            if let Some(step) = self.find_tuple( &block) {
                 return Some(step);
             }
         }
 
         None
+    }
+
+    fn name(&self) -> String {
+        format!("Naked Subset ({})", self.count)
     }
 }
 

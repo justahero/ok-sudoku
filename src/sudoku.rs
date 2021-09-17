@@ -1,6 +1,13 @@
-use std::{convert::TryFrom, fmt::{self, Debug, Display}};
+use std::{
+    convert::TryFrom,
+    fmt::{self, Debug, Display},
+};
 
-use crate::{Candidates, Cell, parser::parse_sudoku, types::{BLOCKS, COLS, HOUSES, Pos, ROWS}};
+use crate::{
+    parser::parse_sudoku,
+    types::{Pos, BLOCKS, COLS, HOUSES, ROWS},
+    Candidates, Cell,
+};
 
 #[derive(Debug)]
 pub enum GridError {
@@ -39,7 +46,7 @@ impl fmt::Display for Sudoku {
                 match (row, col) {
                     (_, 3) | (_, 6) => write!(f, " ")?,
                     (3, 0) | (6, 0) => write!(f, "\n")?,
-                    (_, 0)          => write!(f, "\n")?,
+                    (_, 0) => write!(f, "\n")?,
                     _ => {}
                 }
                 write!(f, "{}", self.get(row, col).digit())?;
@@ -102,7 +109,10 @@ impl Sudoku {
     /// Create a new grid from a list of values
     pub fn new(fields: Vec<u8>) -> Result<Self, GridError> {
         if fields.len() != Self::NUM_FIELDS as usize {
-            return Err(GridError::Invalid(format!("Invalid number of fields - found {} elements", fields.len())));
+            return Err(GridError::Invalid(format!(
+                "Invalid number of fields - found {} elements",
+                fields.len()
+            )));
         }
 
         let cells: Result<Vec<_>, _> = fields
@@ -111,7 +121,10 @@ impl Sudoku {
             .map(|(index, value)| match value {
                 1..=9 => Ok(Cell::number(index, *value)),
                 0 => Ok(Cell::empty(index)),
-                v => Err(GridError::Invalid(format!("Digit must be between 0..=9, was {}", v))),
+                v => Err(GridError::Invalid(format!(
+                    "Digit must be between 0..=9, was {}",
+                    v
+                ))),
             })
             .collect();
 
@@ -128,11 +141,13 @@ impl Sudoku {
                 let index = col + row * Self::ROWS;
 
                 if self.cells[index as usize].is_empty() {
-                    let candidates = self.get_house(row, col)
-                        .fold(Candidates::all(), |mut candidates, (_index, neighbor)| {
+                    let candidates = self.get_house(row, col).fold(
+                        Candidates::all(),
+                        |mut candidates, neighbor| {
                             candidates.unset(neighbor.digit());
                             candidates
-                        });
+                        },
+                    );
 
                     let cell = &mut self.cells[index as usize];
                     cell.set_candidates(candidates);
@@ -147,6 +162,12 @@ impl Sudoku {
         &self.cells[index]
     }
 
+    /// Returns a mutable reference to the cell given by index
+    #[inline(always)]
+    pub fn get_by_mut(&mut self, index: usize) -> &mut Cell {
+        &mut self.cells[index]
+    }
+
     /// Returns the cell given by coordinates
     pub fn get(&self, row: u8, col: u8) -> &Cell {
         let index = col + row * Self::ROWS;
@@ -157,6 +178,11 @@ impl Sudoku {
     pub fn set(&mut self, row: u8, col: u8, digit: u8) {
         let index = col + row * Self::ROWS;
         self.cells[index as usize].set_digit(digit);
+    }
+
+    /// Sets the value of a specifc cell given by index
+    pub fn set_by(&mut self, index: usize, digit: u8) {
+        self.cells[index].set_digit(digit);
     }
 
     /// Unsets the cell at given coordinates
@@ -172,63 +198,70 @@ impl Sudoku {
     }
 
     /// Returns all fields for the given row
-    pub fn get_row(&self, row: u8) -> impl Iterator<Item = (usize, &Cell)> + '_ {
+    pub fn get_row(&self, row: u8) -> impl Iterator<Item = &Cell> + '_ {
         let indices = &ROWS[row as usize];
         indices
             .iter()
-            .map(move |&index| (index as usize, &self.cells[index as usize]))
+            .map(move |&index| &self.cells[index as usize])
     }
 
     /// Returns an iterator over all rows
-    #[inline(always)]
-    pub fn get_rows(&self) -> impl Iterator<Item = &[u8; 9]> {
-        ROWS.iter()
+    pub fn get_rows(&self) -> impl Iterator<Item = Vec<&Cell>> + '_ {
+        ROWS.iter().map(move |row| {
+            row.iter()
+                .map(|&index| self.get_by(index as usize))
+                .collect::<Vec<_>>()
+        })
     }
 
     /// Returns all fields for the given column
-    pub fn get_col(&self, col: u8) -> impl Iterator<Item = (usize, &Cell)> + '_ {
+    pub fn get_col(&self, col: u8) -> impl Iterator<Item = &Cell> + '_ {
         let indices = &COLS[col as usize];
         indices
             .iter()
-            .map(move |&index| (index as usize, &self.cells[index as usize]))
+            .map(move |&index| &self.cells[index as usize])
     }
 
     /// Returns an iterator over all columns
-    #[inline(always)]
-    pub fn get_cols(&self) -> impl Iterator<Item = &[u8; 9]> {
-        COLS.iter()
+    pub fn get_cols(&self) -> impl Iterator<Item = Vec<&Cell>> + '_ {
+        COLS.iter().map(move |col| {
+            col.iter()
+                .map(|&index| self.get_by(index as usize))
+                .collect::<Vec<_>>()
+        })
     }
 
     /// Returns all fields from the given block
-    pub fn get_block(&self, row: u8, col: u8) -> impl Iterator<Item = (usize, &Cell)> + '_ {
+    pub fn get_block(&self, row: u8, col: u8) -> impl Iterator<Item = &Cell> + '_ {
         let index = Pos::new(row, col).block();
         let indices = &BLOCKS[index as usize];
         indices
             .iter()
-            .map(move |&index| (index as usize, &self.cells[index as usize]))
+            .map(move |&index| &self.cells[index as usize])
     }
 
     /// Returns an iterator over all blocks
-    #[inline(always)]
-    pub fn get_blocks(&self) -> impl Iterator<Item = &[u8; 9]> {
-        BLOCKS.iter()
+    pub fn get_blocks(&self) -> impl Iterator<Item = Vec<&Cell>> + '_ {
+        BLOCKS.iter().map(move |block| {
+            block
+                .iter()
+                .map(|&index| self.get_by(index as usize))
+                .collect::<Vec<_>>()
+        })
     }
 
     /// Returns the house, all fields from same row, col and block
-    pub fn get_house(&self, row: u8, col: u8) -> impl Iterator<Item = (usize, &Cell)> + '_ {
+    pub fn get_house(&self, row: u8, col: u8) -> impl Iterator<Item = &Cell> + '_ {
         let index = col + row * Self::ROWS;
         let indices = &HOUSES[index as usize];
         indices
             .iter()
-            .map(move |&index| (index as usize, &self.cells[index as usize]))
+            .map(move |&index| &self.cells[index as usize])
     }
 
     /// Returns the list of all field values with index
-    pub fn iter(&self) -> impl Iterator<Item = (usize, &Cell)> + '_ {
-        self.cells
-            .iter()
-            .enumerate()
-            .map(move |(index, cell)| (index, cell))
+    pub fn iter(&self) -> impl Iterator<Item = &Cell> + '_ {
+        self.cells.iter()
     }
 }
 
@@ -247,6 +280,7 @@ mod tests {
 
     use crate::sudoku::Sudoku;
 
+    #[rustfmt::skip]
     const SUDOKU: [u8; 81] = [
         5, 3, 0, 0, 7, 0, 0, 0, 0,
         6, 0, 0, 1, 9, 5, 0, 0, 0,
@@ -282,6 +316,7 @@ mod tests {
 
     #[test]
     fn create_sudoku_fails_with_wrong_numbers() {
+        #[rustfmt::skip]
         let numbers = vec![
             0, 0, 0, 0, 0, 0, 9, 8, 4,
             4, 0, 0, 8, 0, 0, 2, 5, 0,
@@ -303,6 +338,7 @@ mod tests {
 
     #[test]
     fn test_init_candidates() {
+        #[rustfmt::skip]
         let sudoku: Vec<u8> = vec![
             8, 0, 0, 7, 3, 9, 0, 0, 6,
             3, 7, 0, 4, 6, 5, 0, 0, 0,
@@ -327,7 +363,7 @@ mod tests {
     #[test]
     fn test_get_row_values() {
         let sudoku = Sudoku::new(SUDOKU.to_vec()).unwrap();
-        let actual = sudoku.get_row(6).map(|(_, c)| c.digit()).collect::<Vec<_>>();
+        let actual = sudoku.get_row(6).map(|c| c.digit()).collect::<Vec<_>>();
         let expected = vec![0u8, 6, 0, 0, 0, 0, 2, 8, 0];
         assert_eq!(expected, actual);
     }
@@ -335,7 +371,7 @@ mod tests {
     #[test]
     fn test_get_col_values() {
         let sudoku = Sudoku::new(SUDOKU.to_vec()).unwrap();
-        let actual = sudoku.get_col(5).map(|(_, c)| c.digit()).collect::<Vec<_>>();
+        let actual = sudoku.get_col(5).map(|c| c.digit()).collect::<Vec<_>>();
         let expected = vec![0u8, 5, 0, 0, 3, 0, 0, 9, 0];
         assert_eq!(expected, actual);
     }

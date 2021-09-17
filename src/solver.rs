@@ -82,7 +82,7 @@ impl Solver {
 
     /// Slow check if the given value for field row, col can be set
     fn possible(sudoku: &Sudoku, row: u8, col: u8, value: u8) -> bool {
-        sudoku.get_house(row, col).find(|(_, cell)| cell.digit() == value).is_none()
+        sudoku.get_house(row, col).find(|cell| cell.digit() == value).is_none()
     }
 
     /// Returns the list of solutions

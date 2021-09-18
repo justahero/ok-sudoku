@@ -41,6 +41,32 @@ impl Debug for Sudoku {
 
 impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // TODO create a vec of vecs, determine longest field in each cell (row / column)
+        let cells = self
+            .iter()
+            .map(|cell| match cell.is_digit() {
+                true => cell.digit().to_string(),
+                false => cell.candidates().iter().join(""),
+            })
+            .collect::<Vec<_>>();
+
+        for row in 0..9 {
+            for col in 0..9 {
+                let index = col + row * Self::ROWS;
+
+                match (row, col) {
+                    (_, 3) | (_, 6) => write!(f, " | ")?,
+                    (3, 0) | (6, 0) => write!(f, " |\n")?,
+                    (_, 0) => write!(f, "\n")?,
+                    _ => {}
+                }
+                write!(f, "{} ", cells[index as usize])?;
+            }
+        }
+
+        // println!("{:?}\n", cells);
+
+        /*
         for index in 0..Self::NUM_FIELDS {
             let row = index as u8 / Sudoku::ROWS;
             let col = index as u8 % Sudoku::COLS;
@@ -53,6 +79,7 @@ impl fmt::Display for Sudoku {
             }
             write!(f, "{}", self.get(index).digit())?;
         }
+        */
         Ok(())
     }
 }

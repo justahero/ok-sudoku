@@ -30,12 +30,13 @@ impl LockedCandidate {
 
         for candidate in 1_u8..=9 {
             // filter cells with the candidate in same group
-            let lines = &groups
+            let lines = groups
                 .iter()
                 .map(|&group| {
                     group
                         .iter()
                         .filter(|&&cell| cell.has_candidate(candidate))
+                        .map(|&cell| cell.index())
                         .collect_vec()
                 })
                 .filter(|group| !group.is_empty())
@@ -44,7 +45,7 @@ impl LockedCandidate {
             // Find the line that contains at least two candidates
             // then check the other lines do not contain the candidate
             for i in 0..=lines.len() {
-                if let Some((&line, others)) = lines
+                if let Some((&indexes, others)) = lines
                     .iter()
                     .cycle()
                     .skip(i)
@@ -52,24 +53,20 @@ impl LockedCandidate {
                     .collect_vec()
                     .split_first()
                 {
-                    let indexes = line.iter().map(|&cell| cell.index()).collect_vec();
-                    if indexes.len() >= 2
-                        && others.iter().map(|&line| line.len()).sum::<usize>() == 0_usize
-                    {
+                    if indexes.len() >= 2 && others.len() == 0_usize {
                         let eliminates = sudoku
                             .get_block(Index::from(indexes[0]).block())
-                            .filter(|&cell| !indexes.contains(&cell.index()))
-                            .filter(|&cell| cell.has_candidate(candidate))
+                            .filter(|&cell| cell.has_candidate(candidate) && !indexes.contains(&cell.index()))
                             .collect_vec();
 
                         if eliminates.len() > 0 {
                             let mut step = Step::new();
 
-                            for cell in line {
-                                step.lock_candidate(cell.index(), candidate)
+                            for index in indexes {
+                                step.lock_candidate(*index, candidate)
                             }
-                            for cell in eliminates {
-                                step.eliminate_candidate(cell.index(), candidate)
+                            for neighbor in eliminates {
+                                step.eliminate_candidate(neighbor.index(), candidate)
                             }
 
                             return Some(step);

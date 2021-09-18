@@ -28,9 +28,8 @@ impl LockedCandidate {
         let groups = [&cells[0..3], &cells[3..6], &cells[6..9]];
 
         for candidate in 1_u8..=9 {
-            /*
             // filter cells with the candidate in same group
-            let cells = &groups
+            let lines = &groups
                 .iter()
                 .map(|&group| {
                     group
@@ -40,9 +39,30 @@ impl LockedCandidate {
                 })
                 .collect::<Vec<_>>();
 
-            // check that one line contains at least two entries, while the other are empty
-            // let (list, others): (Vec<_>, Vec<_>) = cells.iter().partition(|&group| group.len() >= 2);
+            // check that one line contains at least two entries, while the others are empty
+/*             let (list, others): (Vec<_>, Vec<_>) = lines.iter().partition(|&group| group.len() >= 2);
+            if list.len() >= 2 {
+                println!(":: CANDIDATE: {} - list: {:?} - others: {:?}", candidate, list, others);
+            }
+            /*
+            if list.len() >= 2 && others.into_iter().flatten().count() == 0_usize {
+            }
             */
+ */
+
+            // println!(">> CANDIDATE: {}, LINES: {:?}", candidate, lines);
+
+            // find the line that contains at least two candidates
+            // then check the other lines do not contain the candidate
+            for i in 0_u8..=2 {
+                if let Some((first, elements)) = lines.iter().cycle().skip(i as usize).take(3).collect::<Vec<_>>().split_first() {
+                    if first.len() >= 2 && elements.iter().map(|line| line.len()).sum::<usize>() == 0_usize {
+                        println!(":: FIRST: {:?}, LINES: {:?}", first, elements);
+                        // let step = Step::new();
+                        // return Some(step);
+                    }
+                }
+            }
         }
 
         None

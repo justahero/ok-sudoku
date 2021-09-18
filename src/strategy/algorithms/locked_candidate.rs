@@ -38,16 +38,17 @@ impl LockedCandidate {
                         .filter(|&&cell| cell.has_candidate(candidate))
                         .collect_vec()
                 })
+                .filter(|group| !group.is_empty())
                 .collect_vec();
 
             // Find the line that contains at least two candidates
             // then check the other lines do not contain the candidate
-            for i in 0_u8..=2 {
+            for i in 0..=lines.len() {
                 if let Some((&line, others)) = lines
                     .iter()
                     .cycle()
-                    .skip(i as usize)
-                    .take(3)
+                    .skip(i)
+                    .take(lines.len())
                     .collect::<Vec<_>>()
                     .split_first()
                 {

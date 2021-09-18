@@ -196,6 +196,12 @@ impl Index {
     }
 }
 
+impl From<usize> for Index {
+    fn from(index: usize) -> Self {
+        Self(index as u8)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{Sudoku, types::Index};

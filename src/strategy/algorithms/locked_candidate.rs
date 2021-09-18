@@ -49,37 +49,28 @@ impl LockedCandidate {
                     .cycle()
                     .skip(i)
                     .take(lines.len())
-                    .collect::<Vec<_>>()
+                    .collect_vec()
                     .split_first()
                 {
-                    if line.len() >= 2
+                    let indexes = line.iter().map(|&cell| cell.index()).collect_vec();
+                    if indexes.len() >= 2
                         && others.iter().map(|&line| line.len()).sum::<usize>() == 0_usize
                     {
-                        let cell = line.first().expect("Failed to get first cell");
-                        let index = Index::new(cell.index() as u8).block();
-                        let block = sudoku.get_block(index);
-
-                        // get the block of the match and check there are other cells with the same candidate
-                        // then create a new step to eliminate these candidates
-                        let line_indexes = line.iter().map(|&c| c.index()).collect_vec();
-                        let neighbors = block
-                            .filter(|&cell| !cell.is_digit() && !line_indexes.contains(&cell.index()))
-                            .collect_vec();
-
-                        let eliminates = neighbors
-                            .iter()
+                        let eliminates = sudoku
+                            .get_block(Index::from(indexes[0]).block())
+                            .filter(|&cell| !indexes.contains(&cell.index()))
                             .filter(|&cell| cell.has_candidate(candidate))
                             .collect_vec();
 
                         if eliminates.len() > 0 {
                             let mut step = Step::new();
 
-                            line.iter()
-                                .for_each(|&cell| step.lock_candidate(cell.index(), candidate));
-
-                            eliminates.iter().for_each(|&cell| {
+                            for cell in line {
+                                step.lock_candidate(cell.index(), candidate)
+                            }
+                            for cell in eliminates {
                                 step.eliminate_candidate(cell.index(), candidate)
-                            });
+                            }
 
                             return Some(step);
                         }

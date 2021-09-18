@@ -72,6 +72,7 @@ impl LockedCandidate {
 
                         if eliminates.len() > 0 {
                             let mut step = Step::new();
+
                             line.iter()
                                 .for_each(|&cell| step.lock_candidate(cell.index(), candidate));
 
@@ -163,7 +164,6 @@ mod tests {
         let mut sudoku = Sudoku::try_from(sudoku).unwrap();
         sudoku.init_candidates();
 
-        println!("SUDOKU:\n{}", sudoku);
         let strategy = LockedCandidate::new();
 
         let step = strategy.find(&sudoku).unwrap();

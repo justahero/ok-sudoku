@@ -1,10 +1,6 @@
 use crate::{solver::SolverError, Sudoku};
 
-use super::{
-    algorithms::{HiddenSingle, HiddenSubset, NakedSingle, NakedSubset},
-    step::Step,
-    Strategy,
-};
+use super::{Strategy, algorithms::{HiddenSingle, HiddenSubset, LockedCandidate, NakedSingle, NakedSubset}, step::Step};
 
 /// The `StrategySolver` is the struct for solving Sudokus
 /// by applying logical strategies that humans can do.
@@ -58,6 +54,7 @@ impl StrategySolver {
         self.push_strategy(Box::new(HiddenSubset::pair()));
         self.push_strategy(Box::new(HiddenSubset::triple()));
         self.push_strategy(Box::new(HiddenSubset::quadruple()));
+        self.push_strategy(Box::new(LockedCandidate::new()));
     }
 
     /// Adds a single strategy

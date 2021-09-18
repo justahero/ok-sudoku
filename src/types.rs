@@ -1,3 +1,5 @@
+use crate::Sudoku;
+
 pub(crate) static BLOCKS: [[u8; 9]; 9] = [
     [00, 01, 02, 09, 10, 11, 18, 19, 20],
     [03, 04, 05, 12, 13, 14, 21, 22, 23],
@@ -117,3 +119,104 @@ pub(crate) static HOUSES: [[u8; 20]; 81] = [
     [07, 16, 25, 34, 43, 52, 60, 61, 62, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 80],
     [08, 17, 26, 35, 44, 53, 60, 61, 62, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79],
 ];
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct Pos(u8, u8);
+
+#[allow(dead_code)]
+impl Pos {
+    #[inline(always)]
+    pub fn row(&self) -> u8 {
+        self.0
+    }
+
+    #[inline(always)]
+    pub fn col(&self) -> u8 {
+        self.1
+    }
+
+    /// Returns the block the index is in the Sudoku grid
+    /// Block indices map from the grid as follows.
+    ///
+    ///   0 0 0 1 1 1 2 2 2
+    ///   0 0 0 1 1 1 2 2 2
+    ///   0 0 0 1 1 1 2 2 2
+    ///   3 3 3 4 4 4 5 5 5
+    ///   3 3 3 4 4 4 5 5 5
+    ///   3 3 3 4 4 4 5 5 5
+    ///   6 6 6 7 7 7 8 8 8
+    ///   6 6 6 7 7 7 8 8 8
+    ///   6 6 6 7 7 7 8 8 8
+    ///
+    pub fn block(&self) -> u8 {
+        let row = (self.0 / Sudoku::BLOCK_SIZE) % Sudoku::BLOCK_SIZE;
+        let col = self.1 / Sudoku::BLOCK_SIZE;
+        row * Sudoku::BLOCK_SIZE + col
+    }
+}
+
+impl From<Index> for Pos {
+    fn from(index: Index) -> Self {
+        let row = index.0 / Sudoku::ROWS;
+        let col = index.0 % Sudoku::COLS;
+        Self(row, col)
+    }
+}
+
+/// An Index that can be used to determine other properties
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct Index(u8);
+
+#[allow(dead_code)]
+impl Index {
+    /// Creates a new Index struct from given u8 value
+    pub fn new(index: u8) -> Self {
+        assert!(index < 81);
+        Self(index)
+    }
+
+    /// Returns the row on the board
+    #[inline(always)]
+    pub fn row(&self) -> u8 {
+        self.0 / Sudoku::ROWS
+    }
+
+    /// Returns the column on the board
+    #[inline(always)]
+    pub fn col(&self) -> u8 {
+        self.0 % Sudoku::COLS
+    }
+
+    pub fn block(&self) -> u8 {
+        Pos::from(self.clone()).block()
+    }
+
+    pub fn pos(&self) -> Pos {
+        Pos(self.row(), self.col())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Sudoku, types::Index};
+
+    #[test]
+    fn test_pos_block_indices() {
+        let expected_blocks: Vec<u8> = vec![
+            0, 0, 0, 1, 1, 1, 2, 2, 2,
+            0, 0, 0, 1, 1, 1, 2, 2, 2,
+            0, 0, 0, 1, 1, 1, 2, 2, 2,
+            3, 3, 3, 4, 4, 4, 5, 5, 5,
+            3, 3, 3, 4, 4, 4, 5, 5, 5,
+            3, 3, 3, 4, 4, 4, 5, 5, 5,
+            6, 6, 6, 7, 7, 7, 8, 8, 8,
+            6, 6, 6, 7, 7, 7, 8, 8, 8,
+            6, 6, 6, 7, 7, 7, 8, 8, 8,
+        ];
+
+        for index in 0..Sudoku::NUM_FIELDS {
+            let block = Index::new(index as u8).block();
+            assert_eq!(expected_blocks[index], block);
+        }
+    }
+}

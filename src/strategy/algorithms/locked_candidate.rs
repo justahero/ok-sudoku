@@ -35,31 +35,35 @@ impl LockedCandidate {
                     group
                         .iter()
                         .filter(|&&cell| cell.has_candidate(candidate))
-                        .collect::<Vec<_>>()
+                        .collect_vec()
                 })
-                .collect::<Vec<_>>();
+                .collect_vec();
 
-            // check that one line contains at least two entries, while the others are empty
-/*             let (list, others): (Vec<_>, Vec<_>) = lines.iter().partition(|&group| group.len() >= 2);
-            if list.len() >= 2 {
-                println!(":: CANDIDATE: {} - list: {:?} - others: {:?}", candidate, list, others);
-            }
-            /*
-            if list.len() >= 2 && others.into_iter().flatten().count() == 0_usize {
-            }
-            */
- */
+            println!(">> CANDIDATE: {}, {:?}", candidate, lines);
 
-            // println!(">> CANDIDATE: {}, LINES: {:?}", candidate, lines);
-
-            // find the line that contains at least two candidates
+            // Find the line that contains at least two candidates
             // then check the other lines do not contain the candidate
             for i in 0_u8..=2 {
-                if let Some((first, elements)) = lines.iter().cycle().skip(i as usize).take(3).collect::<Vec<_>>().split_first() {
-                    if first.len() >= 2 && elements.iter().map(|line| line.len()).sum::<usize>() == 0_usize {
-                        println!(":: FIRST: {:?}, LINES: {:?}", first, elements);
+                if let Some((&line, others)) = lines.iter().cycle().skip(i as usize).take(3).collect::<Vec<_>>().split_first() {
+                    if line.len() >= 2 && others.iter().map(|&line| line.len()).sum::<usize>() == 0_usize {
+                        println!(":: FIRST: {:?}, LINES: {:?}", line, others);
+
+                        let cell = line.first().expect("Failed to get first cell");
+
+                        // get the block of the match and check there are other cells with the same candidate
+                        // then create a new step to eliminate these candidates
                         // let step = Step::new();
                         // return Some(step);
+                        let line_indexes = line.iter().map(|&c| c.index()).collect_vec();
+                        let neighbors = sudoku.get_block(cell.index()).filter(|&cell| {
+                            !line_indexes.contains(&cell.index())
+                        }).collect_vec();
+
+                        let eliminates = neighbors.iter().filter(|&cell| cell.has_candidate(candidate)).collect_vec();
+                        if eliminates.len() > 0 {
+                            let mut step = Step::new();
+                            return Some(step);
+                        }
                     }
                 }
             }
@@ -96,15 +100,15 @@ mod tests {
     #[test]
     fn find_locked_candidate() {
         let sudoku = r"
-            984......
-            ..25...4.
-            ..19.4..2
-            ..6.9723.
-            ..36.2...
-            2.9.3561.
-            195768423
-            427351896
-            638..9751
+            318..54.6
+            ...6.381.
+            ..6.8.5.3
+            864952137
+            123476958
+            795318264
+            .3.5..78.
+            .....73.5
+            ....39641
         ";
 
         let mut sudoku = Sudoku::try_from(sudoku).unwrap();
@@ -116,9 +120,9 @@ mod tests {
 
         let step = step.unwrap();
         assert_eq!(
-            &vec![(18_usize, 5), (19_usize, 5)],
+            &vec![(10_usize, 7), (11_usize, 7)],
             step.locked_candidates()
         );
-        assert_eq!(&vec![(24_usize, 5)], step.eliminated_candidates());
+        assert_eq!(&vec![(19_usize, 7)], step.eliminated_candidates());
     }
 }

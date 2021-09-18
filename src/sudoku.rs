@@ -2,6 +2,7 @@ use std::{
     convert::TryFrom,
     fmt::{self, Debug, Display},
 };
+use itertools::Itertools;
 
 use crate::{
     parser::parse_sudoku,
@@ -50,36 +51,22 @@ impl fmt::Display for Sudoku {
             })
             .collect::<Vec<_>>();
 
-        for row in 0..9 {
-            for col in 0..9 {
+        for row in 0_u8..9 {
+            write!(f, "| ")?;
+            for col in 0_u8..9 {
+                let longest = cells.iter().skip(col as usize).step_by(9).map(|cell| cell.len()).max().unwrap_or(1);
                 let index = col + row * Self::ROWS;
 
                 match (row, col) {
-                    (_, 3) | (_, 6) => write!(f, " | ")?,
-                    (3, 0) | (6, 0) => write!(f, " |\n")?,
-                    (_, 0) => write!(f, "\n")?,
+                    (_, 3) | (_, 6) => write!(f, "| ")?,
                     _ => {}
                 }
-                write!(f, "{} ", cells[index as usize])?;
+                let digits = &cells[index as usize];
+
+                write!(f, "{:<width$} ", digits, width=longest)?;
             }
+            write!(f, "|\n")?;
         }
-
-        // println!("{:?}\n", cells);
-
-        /*
-        for index in 0..Self::NUM_FIELDS {
-            let row = index as u8 / Sudoku::ROWS;
-            let col = index as u8 % Sudoku::COLS;
-
-            match (row, col) {
-                (_, 3) | (_, 6) => write!(f, " ")?,
-                (3, 0) | (6, 0) => write!(f, "\n")?,
-                (_, 0) => write!(f, "\n")?,
-                _ => {}
-            }
-            write!(f, "{}", self.get(index).digit())?;
-        }
-        */
         Ok(())
     }
 }

@@ -52,7 +52,7 @@ impl fmt::Display for Sudoku {
             format!("{}{}{}", start, line.join(middle), end)
         }
 
-        // TODO create a vec of vecs, determine longest field in each cell (row / column)
+        // for each cell get digit or list of candidatess
         let cells = self
             .iter()
             .map(|cell| match cell.is_digit() {
@@ -61,36 +61,34 @@ impl fmt::Display for Sudoku {
             })
             .collect::<Vec<_>>();
 
+        // for each list of digits determine the max width to print the longest string in each column
         let widths = (0_usize..9).map(|col| {
             cells.iter().skip(col as usize).step_by(9).map(|cell| cell.len()).max().unwrap_or(1)
         }).collect::<Vec<_>>();
 
-        println!("LONGEST: {:?}\n", widths);
-
-        for row in 0_u8..9 {
-            match row {
-                0 => {
-                    write!(f, "{}\n", line(&widths, "┏", "┯", "┓"))?;
-                },
-                3 | 6 => (),
-                _ => (),
-            };
+        // print all rows
+        write!(f, "{}\n", line(&widths, "┏", "┯", "┓"))?;
+        for row in 0usize..9 {
+            if row == 3 || row == 6 {
+                write!(f, "{}\n", line(&widths, "┠", "┼", "┨"))?;
+            }
 
             write!(f, "┃ ")?;
-            for col in 0_u8..9 {
-                let longest = cells.iter().skip(col as usize).step_by(9).map(|cell| cell.len()).max().unwrap_or(1);
-                let index = col + row * Self::ROWS;
+            for col in 0..9 {
+                let longest = widths[col];
+                let index = col + row * Self::ROWS as usize;
 
                 match (row, col) {
                     (_, 3) | (_, 6) => write!(f, "┃ ")?,
                     _ => {}
                 }
-                let digits = &cells[index as usize];
+                let digits = &cells[index];
 
                 write!(f, "{:<width$} ", digits, width=longest)?;
             }
             write!(f, "┃\n")?;
         }
+        write!(f, "{}\n", line(&widths, "┗", "┻", "┛"))?;
         Ok(())
     }
 }

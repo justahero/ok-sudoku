@@ -49,8 +49,8 @@ impl Step {
     }
 
     /// Mark candidate as constrained / locked
-    pub fn lock_candidate(&mut self, _index: usize, _candidate: u8) {
-        // TODO
+    pub fn lock_candidate(&mut self, index: usize, candidate: u8) {
+        self.constrained_candidates.push((index, candidate));
     }
 
     /// Returns list of locked / constrained candidates

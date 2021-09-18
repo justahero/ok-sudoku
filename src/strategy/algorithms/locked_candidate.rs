@@ -2,6 +2,7 @@ use itertools::Itertools;
 
 use crate::{
     strategy::{step::Step, Strategy},
+    types::Index,
     Cell, Sudoku,
 };
 
@@ -39,29 +40,45 @@ impl LockedCandidate {
                 })
                 .collect_vec();
 
-            println!(">> CANDIDATE: {}, {:?}", candidate, lines);
-
             // Find the line that contains at least two candidates
             // then check the other lines do not contain the candidate
             for i in 0_u8..=2 {
-                if let Some((&line, others)) = lines.iter().cycle().skip(i as usize).take(3).collect::<Vec<_>>().split_first() {
-                    if line.len() >= 2 && others.iter().map(|&line| line.len()).sum::<usize>() == 0_usize {
-                        println!(":: FIRST: {:?}, LINES: {:?}", line, others);
-
+                if let Some((&line, others)) = lines
+                    .iter()
+                    .cycle()
+                    .skip(i as usize)
+                    .take(3)
+                    .collect::<Vec<_>>()
+                    .split_first()
+                {
+                    if line.len() >= 2
+                        && others.iter().map(|&line| line.len()).sum::<usize>() == 0_usize
+                    {
                         let cell = line.first().expect("Failed to get first cell");
+                        let index = Index::new(cell.index() as u8).block();
+                        let block = sudoku.get_block(index);
 
                         // get the block of the match and check there are other cells with the same candidate
                         // then create a new step to eliminate these candidates
-                        // let step = Step::new();
-                        // return Some(step);
                         let line_indexes = line.iter().map(|&c| c.index()).collect_vec();
-                        let neighbors = sudoku.get_block(cell.index()).filter(|&cell| {
-                            !line_indexes.contains(&cell.index())
-                        }).collect_vec();
+                        let neighbors = block
+                            .filter(|&cell| !cell.is_digit() && !line_indexes.contains(&cell.index()))
+                            .collect_vec();
 
-                        let eliminates = neighbors.iter().filter(|&cell| cell.has_candidate(candidate)).collect_vec();
+                        let eliminates = neighbors
+                            .iter()
+                            .filter(|&cell| cell.has_candidate(candidate))
+                            .collect_vec();
+
                         if eliminates.len() > 0 {
                             let mut step = Step::new();
+                            line.iter()
+                                .for_each(|&cell| step.lock_candidate(cell.index(), candidate));
+
+                            eliminates.iter().for_each(|&cell| {
+                                step.eliminate_candidate(cell.index(), candidate)
+                            });
+
                             return Some(step);
                         }
                     }
@@ -77,6 +94,12 @@ impl Strategy for LockedCandidate {
     fn find(&self, sudoku: &Sudoku) -> Option<Step> {
         for row in sudoku.get_rows() {
             if let Some(step) = self.find_locked_candidate(sudoku, &row) {
+                return Some(step);
+            }
+        }
+
+        for col in sudoku.get_cols() {
+            if let Some(step) = self.find_locked_candidate(sudoku, &col) {
                 return Some(step);
             }
         }
@@ -98,7 +121,7 @@ mod tests {
     use super::LockedCandidate;
 
     #[test]
-    fn find_locked_candidate() {
+    fn locked_candidate_row_found() {
         let sudoku = r"
             318..54.6
             ...6.381.
@@ -115,14 +138,52 @@ mod tests {
         sudoku.init_candidates();
         let strategy = LockedCandidate::new();
 
-        let step = strategy.find(&sudoku);
-        assert!(step.is_some());
-
-        let step = step.unwrap();
+        let step = strategy.find(&sudoku).unwrap();
         assert_eq!(
             &vec![(10_usize, 7), (11_usize, 7)],
             step.locked_candidates()
         );
         assert_eq!(&vec![(19_usize, 7)], step.eliminated_candidates());
     }
+
+    #[test]
+    fn locked_candidate_column_found() {
+        let sudoku = r"
+            762..8..1
+            98......6
+            15.....87
+            478..3169
+            526..9873
+            3198..425
+            835..1692
+            297685314
+            641932758
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+
+        println!("SUDOKU:\n{}", sudoku);
+        let strategy = LockedCandidate::new();
+
+        let step = strategy.find(&sudoku).unwrap();
+        assert_eq!(
+            &vec![(14_usize, 4), (23_usize, 4)],
+            step.locked_candidates()
+        );
+        assert_eq!(
+            &vec![
+                (3_usize, 4),
+                (4_usize, 4),
+                (12_usize, 4),
+                (13_usize, 4),
+                (21_usize, 4),
+                (22_usize, 4)
+            ],
+            step.eliminated_candidates(),
+        );
+    }
+
+    #[test]
+    fn locked_candidate_not_in_grid() {}
 }

@@ -255,8 +255,8 @@ impl Sudoku {
     }
 
     /// Returns all fields from the given block
-    pub fn get_block(&self, index: usize) -> impl Iterator<Item = &Cell> + '_ {
-        let indices = &BLOCKS[index];
+    pub fn get_block(&self, index: u8) -> impl Iterator<Item = &Cell> + '_ {
+        let indices = &BLOCKS[index as usize];
         indices
             .iter()
             .map(move |&index| &self.cells[index as usize])

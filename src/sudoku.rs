@@ -42,6 +42,16 @@ impl Debug for Sudoku {
 
 impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Helper function to generate a line to display
+        fn line(widths: &[usize], start: &str, middle: &str, end: &str) -> String {
+            let line: Vec<String> = widths.iter().chunks(3).into_iter().map(|widths| {
+                let total = widths.sum::<usize>();
+                String::from("━").repeat(total + 4)
+            }).collect::<Vec<_>>();
+
+            format!("{}{}{}", start, line.join(middle), end)
+        }
+
         // TODO create a vec of vecs, determine longest field in each cell (row / column)
         let cells = self
             .iter()
@@ -51,21 +61,35 @@ impl fmt::Display for Sudoku {
             })
             .collect::<Vec<_>>();
 
+        let widths = (0_usize..9).map(|col| {
+            cells.iter().skip(col as usize).step_by(9).map(|cell| cell.len()).max().unwrap_or(1)
+        }).collect::<Vec<_>>();
+
+        println!("LONGEST: {:?}\n", widths);
+
         for row in 0_u8..9 {
-            write!(f, "| ")?;
+            match row {
+                0 => {
+                    write!(f, "{}\n", line(&widths, "┏", "┯", "┓"))?;
+                },
+                3 | 6 => (),
+                _ => (),
+            };
+
+            write!(f, "┃ ")?;
             for col in 0_u8..9 {
                 let longest = cells.iter().skip(col as usize).step_by(9).map(|cell| cell.len()).max().unwrap_or(1);
                 let index = col + row * Self::ROWS;
 
                 match (row, col) {
-                    (_, 3) | (_, 6) => write!(f, "| ")?,
+                    (_, 3) | (_, 6) => write!(f, "┃ ")?,
                     _ => {}
                 }
                 let digits = &cells[index as usize];
 
                 write!(f, "{:<width$} ", digits, width=longest)?;
             }
-            write!(f, "|\n")?;
+            write!(f, "┃\n")?;
         }
         Ok(())
     }

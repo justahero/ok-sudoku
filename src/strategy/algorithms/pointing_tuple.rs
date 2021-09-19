@@ -3,133 +3,93 @@ use itertools::Itertools;
 use crate::{
     strategy::{step::Step, Strategy},
     types::Index,
-    Sudoku,
+    Cell, Sudoku,
 };
 
 pub struct PointingTuple {}
 
-impl PointingTuple {
+impl<'a> PointingTuple {
     pub fn new() -> Self {
         Self {}
     }
-}
 
-impl Strategy for PointingTuple {
-    fn find(&self, sudoku: &Sudoku) -> Option<Step> {
-        // find single mini row with same candidate in block
-        // then check row for candidates, eliminate these
-        for cells in sudoku.get_blocks() {
-            let lines = [&cells[0..3], &cells[3..6], &cells[6..9]];
-
-            for candidate in 1_u8..=9 {
-                // filter cells with the candidate in same group
-                let lines = lines
-                    .iter()
-                    .map(|&group| {
-                        group
-                            .iter()
-                            .filter(|&&cell| cell.has_candidate(candidate))
-                            .map(|&cell| cell.index())
-                            .collect_vec()
-                    })
-                    .filter(|group| !group.is_empty())
-                    .collect_vec();
-
-                for i in 0..=lines.len() {
-                    if let Some((&indexes, others)) = lines
+    fn find_locked<F>(&self, lines: &[&[&Cell]; 3], get_house: F) -> Option<Step>
+    where
+        F: Fn(usize) -> Box<dyn Iterator<Item = &'a Cell> + 'a>,
+    {
+        for candidate in 1_u8..=9 {
+            let lines = lines
+                .iter()
+                .map(|&group| {
+                    group
                         .iter()
-                        .cycle()
-                        .skip(i)
-                        .take(lines.len())
+                        .filter(|&&cell| cell.has_candidate(candidate))
+                        .map(|&cell| cell.index())
                         .collect_vec()
-                        .split_first()
-                    {
-                        if indexes.len() >= 2 && others.len() == 0_usize {
-                            // get remaining cells from same row
-                            let row = Index::from(indexes[0]).row();
-                            let eliminates = sudoku
-                                .get_row(row)
-                                .filter(|&cell| {
-                                    cell.has_candidate(candidate)
-                                        && !indexes.contains(&cell.index())
-                                })
-                                .collect_vec();
+                })
+                .filter(|group| !group.is_empty())
+                .collect_vec();
 
-                            if eliminates.len() > 0 {
-                                let mut step = Step::new();
+            for i in 0..=lines.len() {
+                if let Some((&indexes, others)) = lines
+                    .iter()
+                    .cycle()
+                    .skip(i)
+                    .take(lines.len())
+                    .collect_vec()
+                    .split_first()
+                {
+                    if indexes.len() >= 2 && others.len() == 0_usize {
+                        let eliminates = get_house(indexes[0])
+                            .filter(|&cell| {
+                                cell.has_candidate(candidate) && !indexes.contains(&cell.index())
+                            })
+                            .collect_vec();
 
-                                for index in indexes {
-                                    step.lock_candidate(*index, candidate)
-                                }
-                                for neighbor in eliminates {
-                                    step.eliminate_candidate(neighbor.index(), candidate)
-                                }
+                        if eliminates.len() > 0 {
+                            let mut step = Step::new();
 
-                                return Some(step);
+                            for index in indexes {
+                                step.lock_candidate(*index, candidate)
                             }
+                            for neighbor in eliminates {
+                                step.eliminate_candidate(neighbor.index(), candidate)
+                            }
+
+                            return Some(step);
                         }
                     }
                 }
             }
         }
 
+        None
+    }
+}
+
+impl Strategy for PointingTuple {
+    fn find(&self, sudoku: &Sudoku) -> Option<Step> {
+        for cells in sudoku.get_blocks() {
+            let lines = [&cells[0..3], &cells[3..6], &cells[6..9]];
+
+            if let Some(step) = self.find_locked(&lines, |index| {
+                Box::new(sudoku.get_row(Index::from(index).row()))
+            }) {
+                return Some(step);
+            }
+        }
+
         for cells in sudoku.get_blocks() {
             let lines = [
-                [&cells[0], &cells[3], &cells[6]],
-                [&cells[1], &cells[4], &cells[7]],
-                [&cells[2], &cells[5], &cells[8]],
+                &vec![cells[0], cells[3], cells[6]][0..3],
+                &vec![cells[1], cells[4], cells[7]][0..3],
+                &vec![cells[2], cells[5], cells[8]][0..3],
             ];
 
-            for candidate in 1_u8..=9 {
-                // filter cells with the candidate in same group
-                let lines = lines
-                    .iter()
-                    .map(|&group| {
-                        group
-                            .iter()
-                            .filter(|&&cell| cell.has_candidate(candidate))
-                            .map(|&cell| cell.index())
-                            .collect_vec()
-                    })
-                    .filter(|group| !group.is_empty())
-                    .collect_vec();
-
-                for i in 0..=lines.len() {
-                    if let Some((&indexes, others)) = lines
-                        .iter()
-                        .cycle()
-                        .skip(i)
-                        .take(lines.len())
-                        .collect_vec()
-                        .split_first()
-                    {
-                        if indexes.len() >= 2 && others.len() == 0_usize {
-                            let col = Index::from(indexes[0]).col();
-
-                            // get remaining cells from same column
-                            let eliminates = sudoku
-                                .get_col(col)
-                                .filter(|&cell| {
-                                    cell.has_candidate(candidate)
-                                        && !indexes.contains(&cell.index())
-                                })
-                                .collect_vec();
-
-                            if eliminates.len() > 0 {
-                                let mut step = Step::new();
-
-                                for index in indexes {
-                                    step.lock_candidate(*index, candidate)
-                                }
-                                for neighbor in eliminates {
-                                    step.eliminate_candidate(neighbor.index(), candidate)
-                                }
-
-                                return Some(step);
-                            }
-                        }
-                    }
-                }
+            if let Some(step) = self.find_locked(&lines, |index| {
+                Box::new(sudoku.get_col(Index::from(index).col()))
+            }) {
+                return Some(step);
             }
         }
 
@@ -199,7 +159,10 @@ mod tests {
         let strategy = PointingTuple::new();
 
         let step = strategy.find(&sudoku).expect("Should return step");
-        assert_eq!(&vec![(64_usize, 7), (73_usize, 7)], step.locked_candidates(),);
+        assert_eq!(
+            &vec![(64_usize, 7), (73_usize, 7)],
+            step.locked_candidates(),
+        );
         assert_eq!(&vec![(37_usize, 7)], step.eliminated_candidates());
     }
 }

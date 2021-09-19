@@ -1,69 +1,16 @@
-use itertools::Itertools;
-
 use crate::{
     strategy::{step::Step, Strategy},
     types::Index,
-    Cell, Sudoku,
+    Sudoku,
 };
+
+use super::find_locked;
 
 pub struct PointingTuple {}
 
 impl<'a> PointingTuple {
     pub fn new() -> Self {
         Self {}
-    }
-
-    fn find_locked<F>(&self, lines: &[&[&Cell]; 3], get_house: F) -> Option<Step>
-    where
-        F: Fn(usize) -> Box<dyn Iterator<Item = &'a Cell> + 'a>,
-    {
-        for candidate in 1_u8..=9 {
-            let lines = lines
-                .iter()
-                .map(|&group| {
-                    group
-                        .iter()
-                        .filter(|&&cell| cell.has_candidate(candidate))
-                        .map(|&cell| cell.index())
-                        .collect_vec()
-                })
-                .filter(|group| !group.is_empty())
-                .collect_vec();
-
-            for i in 0..=lines.len() {
-                if let Some((&indexes, others)) = lines
-                    .iter()
-                    .cycle()
-                    .skip(i)
-                    .take(lines.len())
-                    .collect_vec()
-                    .split_first()
-                {
-                    if indexes.len() >= 2 && others.len() == 0_usize {
-                        let eliminates = get_house(indexes[0])
-                            .filter(|&cell| {
-                                cell.has_candidate(candidate) && !indexes.contains(&cell.index())
-                            })
-                            .collect_vec();
-
-                        if eliminates.len() > 0 {
-                            let mut step = Step::new();
-
-                            for index in indexes {
-                                step.lock_candidate(*index, candidate)
-                            }
-                            for neighbor in eliminates {
-                                step.eliminate_candidate(neighbor.index(), candidate)
-                            }
-
-                            return Some(step);
-                        }
-                    }
-                }
-            }
-        }
-
-        None
     }
 }
 
@@ -72,7 +19,7 @@ impl Strategy for PointingTuple {
         for cells in sudoku.get_blocks() {
             let lines = [&cells[0..3], &cells[3..6], &cells[6..9]];
 
-            if let Some(step) = self.find_locked(&lines, |index| {
+            if let Some(step) = find_locked(&lines, |index| {
                 Box::new(sudoku.get_row(Index::from(index).row()))
             }) {
                 return Some(step);
@@ -86,7 +33,7 @@ impl Strategy for PointingTuple {
                 &vec![cells[2], cells[5], cells[8]][0..3],
             ];
 
-            if let Some(step) = self.find_locked(&lines, |index| {
+            if let Some(step) = find_locked(&lines, |index| {
                 Box::new(sudoku.get_col(Index::from(index).col()))
             }) {
                 return Some(step);

@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 
-use crate::{Cell, Sudoku, strategy::{step::Step, Strategy}};
+use itertools::Itertools;
+
+use crate::{
+    strategy::{step::Step, Strategy},
+    Cell, Sudoku,
+};
 
 #[derive(Debug)]
 pub struct HiddenSingle {}
@@ -13,7 +18,7 @@ impl HiddenSingle {
     fn find_single(sudoku: &Sudoku, cells: &Vec<&Cell>) -> Option<Step> {
         // Map all candidates to cells
         let candidates = cells.iter().fold(HashMap::new(), |mut map, &cell| {
-            for candidate in cell.candidates_vec() {
+            for candidate in cell.candidates().iter() {
                 if map.get(&candidate).is_none() {
                     map.insert(candidate, vec![]);
                 }
@@ -25,16 +30,27 @@ impl HiddenSingle {
         });
 
         // Find the candidate that is in a single cell
-        if let Some((&digit, cells)) = candidates.iter().find(|&(_, list)| list.len() == 1) {
-            let cell_index = *cells.first().unwrap();
+        if let Some((&digit, indexes)) = candidates.iter().find(|&(_, list)| list.len() == 1) {
+            let cell_index = indexes[0];
+            let cell_indexes = cells.iter().map(|&cell| cell.index()).collect_vec();
+
             let mut step = Step::new();
             step.set_digit(cell_index, digit);
 
+            // eliminate all other candidates from same cell
             for c in sudoku.get(cell_index).candidates().iter() {
                 if c != digit {
                     step.eliminate_candidate(cell_index, c);
                 }
             }
+
+            // eliminate all candidates from same house
+            sudoku
+                .get_house(cell_index)
+                .filter(|&cell| !cell_indexes.contains(&cell.index()))
+                .filter(|&cell| cell.has_candidate(digit))
+                .for_each(|cell| step.eliminate_candidate(cell.index(), digit));
+
             return Some(step);
         }
 
@@ -99,7 +115,45 @@ mod tests {
         let step = strategy.find(&sudoku).unwrap();
         assert_eq!(Some(&(21usize, 6u8)), step.digit());
         assert_eq!(
-            &vec![(21usize, 4u8), (21usize, 9u8)],
+            &vec![(21usize, 4u8), (21usize, 9u8), (3usize, 6)],
+            step.eliminated_candidates()
+        );
+    }
+
+    #[test]
+    fn hidden_single_eliminates_candidates_in_house() {
+        let sudoku = r"
+            4.....8.5
+            .3.......
+            ...7.....
+            .2.....6.
+            ....8.4..
+            ....1....
+            ...6.3.7.
+            5..2.....
+            1.4......
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        sudoku.get_mut(46).unset_candidate(4);
+        let strategy = HiddenSingle::new();
+
+        let step = strategy.find(&sudoku).unwrap();
+        assert_eq!(Some(&(65_usize, 3_u8)), step.digit());
+        assert_eq!(
+            &vec![
+                (65_usize, 6_u8),
+                (65_usize, 7_u8),
+                (65_usize, 8_u8),
+                (65_usize, 9_u8),
+                (29_usize, 3_u8),
+                (38_usize, 3_u8),
+                (47_usize, 3_u8),
+                (69_usize, 3_u8),
+                (70_usize, 3_u8),
+                (71_usize, 3_u8),
+            ],
             step.eliminated_candidates()
         );
     }

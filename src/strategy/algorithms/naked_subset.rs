@@ -44,6 +44,8 @@ impl NakedSubset {
                 if subset.count() == self.count {
                     let mut step = Step::new();
 
+                    // TODO put the naked tuple as locked candidates in step!
+
                     // for all cells outside the naked subset eliminate these candidates
                     neighbors
                         .iter()
@@ -56,7 +58,9 @@ impl NakedSubset {
                             }
                         });
 
-                    return Some(step);
+                    if !step.eliminated_candidates().is_empty() {
+                        return Some(step);
+                    }
                 }
             }
         }
@@ -120,8 +124,42 @@ mod tests {
         sudoku.init_candidates();
         let strategy = NakedSubset::pair();
 
-        // TODO test specific pair of candidates and cells
-        let _step = strategy.find(&sudoku).unwrap();
+        let step = strategy.find(&sudoku).unwrap();
+        println!("SUDOKU: {}", sudoku);
+        assert_eq!(&vec![(64, 3)], step.eliminated_candidates());
+    }
+
+    /// Example: https://github.com/dimitri/sudoku/blob/master/top95.txt
+    #[test]
+    fn find_naked_subset_triple_with_issue() {
+        let sudoku = r"
+            4.....8.5
+            .3.......
+            ...7.....
+            .2.....6.
+            ....8.4..
+            ....1....
+            ...6.3.7.
+            5..2.....
+            1.4......
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        let strategy = NakedSubset::triple();
+
+        let step = strategy.find(&sudoku).unwrap();
+        assert_eq!(
+            &vec![
+                (58, 9),
+                (60, 2),
+                (60, 9),
+                (62, 2),
+                (62, 8),
+                (62, 9)
+            ],
+            step.eliminated_candidates(),
+        );
     }
 
     /// Example: http://hodoku.sourceforge.net/en/show_example.php?file=n301&tech=Naked+Triple
@@ -167,7 +205,6 @@ mod tests {
         let strategy = NakedSubset::quadruple();
 
         let step = strategy.find(&sudoku).unwrap();
-        dbg!(&step);
         assert_eq!(10, step.eliminated_candidates().len());
     }
 }

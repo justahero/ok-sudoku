@@ -174,5 +174,25 @@ mod tests {
     }
 
     #[test]
-    fn locked_candidate_not_in_grid() {}
+    fn locked_candidate_not_in_grid() {
+        // Sudoku from http://hodoku.sourceforge.net/en/show_example.php?file=lc101&tech=Locked+Candidates+Type+1+%28Pointing%29
+        // It's a different locked candidate strategy and should not be found by the algorithm
+        let sudoku = r"
+            984......
+            ..25...4.
+            ..19.4..2
+            ..6.9723.
+            ..36.2...
+            2.9.3561.
+            195768423
+            427351896
+            638..9751
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+
+        let strategy = LockedCandidate::new();
+        // assert_eq!(None, strategy.find(&sudoku));
+    }
 }

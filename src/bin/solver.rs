@@ -19,7 +19,7 @@ fn main() {
     if let Some(grid) = matches.value_of("grid") {
         let grid = Sudoku::try_from(grid).unwrap();
         match Solver::find_unique(&grid) {
-            Ok(result) => println!("Solved: {}", result),
+            Ok(result) => println!("Solved: \n{}", result),
             Err(err) => println!("Failed to solve grid: {}", err),
         }
     }

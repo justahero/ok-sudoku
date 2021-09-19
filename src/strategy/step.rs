@@ -47,4 +47,14 @@ impl Step {
     pub fn digit(&self) -> Option<&(usize, u8)> {
         self.digit.as_ref()
     }
+
+    /// Mark candidate as constrained / locked
+    pub fn lock_candidate(&mut self, index: usize, candidate: u8) {
+        self.constrained_candidates.push((index, candidate));
+    }
+
+    /// Returns list of locked / constrained candidates
+    pub fn locked_candidates(&self) -> &Vec<(usize, u8)> {
+        &self.constrained_candidates
+    }
 }

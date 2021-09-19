@@ -2,10 +2,11 @@ use std::{
     convert::TryFrom,
     fmt::{self, Debug, Display},
 };
+use itertools::Itertools;
 
 use crate::{
     parser::parse_sudoku,
-    types::{Pos, BLOCKS, COLS, HOUSES, ROWS},
+    types::{BLOCKS, COLS, HOUSES, ROWS},
     Candidates, Cell,
 };
 
@@ -41,18 +42,53 @@ impl Debug for Sudoku {
 
 impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for index in 0..Self::NUM_FIELDS {
-            let row = index as u8 / Sudoku::ROWS;
-            let col = index as u8 % Sudoku::COLS;
+        // Helper function to generate a line to display
+        fn line(widths: &[usize], start: &str, middle: &str, end: &str) -> String {
+            let line: Vec<String> = widths.iter().chunks(3).into_iter().map(|widths| {
+                let total = widths.sum::<usize>();
+                String::from("━").repeat(total + 4)
+            }).collect::<Vec<_>>();
 
-            match (row, col) {
-                (_, 3) | (_, 6) => write!(f, " ")?,
-                (3, 0) | (6, 0) => write!(f, "\n")?,
-                (_, 0) => write!(f, "\n")?,
-                _ => {}
-            }
-            write!(f, "{}", self.get(index).digit())?;
+            format!("{}{}{}", start, line.join(middle), end)
         }
+
+        // for each cell get digit or list of candidatess
+        let cells = self
+            .iter()
+            .map(|cell| match cell.is_digit() {
+                true => cell.digit().to_string(),
+                false => cell.candidates().iter().join(""),
+            })
+            .collect::<Vec<_>>();
+
+        // for each list of digits determine the max width to print the longest string in each column
+        let widths = (0_usize..9).map(|col| {
+            cells.iter().skip(col as usize).step_by(9).map(|cell| cell.len()).max().unwrap_or(1)
+        }).collect::<Vec<_>>();
+
+        // print all rows
+        write!(f, "{}\n", line(&widths, "┏", "┯", "┓"))?;
+        for row in 0usize..9 {
+            if row == 3 || row == 6 {
+                write!(f, "{}\n", line(&widths, "┠", "┼", "┨"))?;
+            }
+
+            write!(f, "┃ ")?;
+            for col in 0..9 {
+                let longest = widths[col];
+                let index = col + row * Self::ROWS as usize;
+
+                match (row, col) {
+                    (_, 3) | (_, 6) => write!(f, "┃ ")?,
+                    _ => {}
+                }
+                let digits = &cells[index];
+
+                write!(f, "{:<width$} ", digits, width=longest)?;
+            }
+            write!(f, "┃\n")?;
+        }
+        write!(f, "{}\n", line(&widths, "┗", "┻", "┛"))?;
         Ok(())
     }
 }
@@ -137,7 +173,6 @@ impl Sudoku {
     /// **Note** this will not check or validate the candidates
     ///
     pub fn init_candidates(&mut self) {
-        println!("INIT CANDIDATES");
         for index in 0..Self::NUM_FIELDS {
             if self.cells[index].is_empty() {
                 let neighbors = self.get_house(index);
@@ -145,14 +180,12 @@ impl Sudoku {
                     Candidates::all(),
                     |mut candidates, neighbor| {
                         if neighbor.is_digit() {
-                            println!("--- UNSET: {} - {}", neighbor.index(), neighbor.digit());
                             candidates.unset(neighbor.digit());
                         }
                         candidates
                     },
                 );
 
-                println!(" :: {} - candidates: {:?}", index, candidates);
                 let cell = &mut self.cells[index];
                 cell.set_candidates(candidates);
             }
@@ -222,8 +255,7 @@ impl Sudoku {
     }
 
     /// Returns all fields from the given block
-    pub fn get_block(&self, row: u8, col: u8) -> impl Iterator<Item = &Cell> + '_ {
-        let index = Pos::new(row, col).block();
+    pub fn get_block(&self, index: u8) -> impl Iterator<Item = &Cell> + '_ {
         let indices = &BLOCKS[index as usize];
         indices
             .iter()

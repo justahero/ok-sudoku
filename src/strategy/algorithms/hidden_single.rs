@@ -30,7 +30,6 @@ impl HiddenSingle {
             let mut step = Step::new();
             step.set_digit(cell_index, digit);
 
-            println!("::: CANDIDATES: {:?}", sudoku.get(cell_index));
             for c in sudoku.get(cell_index).candidates().iter() {
                 if c != digit {
                     step.eliminate_candidate(cell_index, c);

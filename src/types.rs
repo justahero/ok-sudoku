@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use crate::Sudoku;
 
 pub(crate) static BLOCKS: [[u8; 9]; 9] = [
@@ -122,75 +120,22 @@ pub(crate) static HOUSES: [[u8; 20]; 81] = [
     [08, 17, 26, 35, 44, 53, 60, 61, 62, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79],
 ];
 
-/// A block index
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) struct Block(u8);
-
-/// A single Column value
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) struct Col(u8);
-
-/// A single Row value
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) struct Row(u8);
-
-/// Position on the board
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Pos(u8, u8);
 
-/// One dimensional index on the board
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) struct Index(u8);
-
-impl Index {
-    /// Creates a new Index based value
-    pub fn _new(index: u8) -> Self {
-        Index(index)
-    }
-
-    /// Returns the index
-    pub fn _index(&self) -> u8 {
+#[allow(dead_code)]
+impl Pos {
+    #[inline(always)]
+    pub fn row(&self) -> u8 {
         self.0
     }
 
-    /// Returns the row on the board
     #[inline(always)]
-    pub fn row(&self) -> Row {
-        Row(self.0 / Sudoku::ROWS)
+    pub fn col(&self) -> u8 {
+        self.1
     }
 
-    /// Returns the column on the board
-    #[inline(always)]
-    pub fn col(&self) -> Col {
-        Col(self.0 % Sudoku::COLS)
-    }
-
-    /// Returns the position on the board
-    #[inline(always)]
-    pub fn pos(&self) -> Pos {
-        Pos(self.row().0, self.col().0)
-    }
-
-    /// Returns the block the index is in
-    #[inline(always)]
-    pub fn _block(&self) -> u8 {
-        self.pos().block()
-    }
-}
-
-impl From<Index> for Pos {
-    fn from(index: Index) -> Self {
-        index.pos()
-    }
-}
-
-impl Pos {
-    pub fn new(row: u8, col: u8) -> Self {
-        Self(row, col)
-    }
-
-    /// Returns the associated block index.
-    ///
+    /// Returns the block the index is in the Sudoku grid
     /// Block indices map from the grid as follows.
     ///
     ///   0 0 0 1 1 1 2 2 2
@@ -210,15 +155,56 @@ impl Pos {
     }
 }
 
-impl Display for Pos {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({}, {})", self.0, self.1)
+impl From<Index> for Pos {
+    fn from(index: Index) -> Self {
+        let row = index.0 / Sudoku::ROWS;
+        let col = index.0 % Sudoku::COLS;
+        Self(row, col)
+    }
+}
+
+/// An Index that can be used to determine other properties
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct Index(u8);
+
+#[allow(dead_code)]
+impl Index {
+    /// Creates a new Index struct from given u8 value
+    pub fn new(index: u8) -> Self {
+        assert!(index < 81);
+        Self(index)
+    }
+
+    /// Returns the row on the board
+    #[inline(always)]
+    pub fn row(&self) -> u8 {
+        self.0 / Sudoku::ROWS
+    }
+
+    /// Returns the column on the board
+    #[inline(always)]
+    pub fn col(&self) -> u8 {
+        self.0 % Sudoku::COLS
+    }
+
+    pub fn block(&self) -> u8 {
+        Pos::from(self.clone()).block()
+    }
+
+    pub fn pos(&self) -> Pos {
+        Pos(self.row(), self.col())
+    }
+}
+
+impl From<usize> for Index {
+    fn from(index: usize) -> Self {
+        Self(index as u8)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{Sudoku, types::Pos};
+    use crate::{Sudoku, types::Index};
 
     #[test]
     fn test_pos_block_indices() {
@@ -234,11 +220,9 @@ mod tests {
             6, 6, 6, 7, 7, 7, 8, 8, 8,
         ];
 
-        for row in 0..Sudoku::ROWS {
-            for col in 0..Sudoku::COLS {
-                let index = row * Sudoku::ROWS + col;
-                assert_eq!(expected_blocks[index as usize], Pos::new(row, col).block());
-            }
+        for index in 0..Sudoku::NUM_FIELDS {
+            let block = Index::new(index as u8).block();
+            assert_eq!(expected_blocks[index], block);
         }
     }
 }

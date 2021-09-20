@@ -1,8 +1,5 @@
 /// A single solving step to either eliminate candidate or find digit
 ///
-/// TODO refine this struct to accomodate most of the strategies
-/// TODO add house (box, row or col) as information to determine what led to elimination?
-///
 #[derive(Debug, Clone, PartialEq)]
 pub struct Step {
     /// The cell index to set digit

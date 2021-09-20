@@ -47,8 +47,6 @@ impl NakedSubset {
                 if subset.count() == self.count {
                     let mut step = Step::new();
 
-                    // TODO put the naked tuple as locked candidates in step!
-                    println!("SUBSET: {:?} - GROUP: {:?}", subset, group);
                     for cell in &group {
                         for candidate in cell.candidates().iter() {
                             step.lock_candidate(cell.index(), candidate);

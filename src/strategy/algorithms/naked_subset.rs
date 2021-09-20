@@ -187,8 +187,20 @@ mod tests {
         sudoku.init_candidates();
         let strategy = NakedSubset::triple();
 
-        // TODO test specific pair of candidates and cells
-        let _step = strategy.find(&sudoku).unwrap();
+        let step = strategy.find(&sudoku).unwrap();
+        assert_eq!(&vec![(1, 6)], step.eliminated_candidates(),);
+        assert_eq!(
+            &vec![
+                (10, 3),
+                (10, 9),
+                (28, 6),
+                (28, 9),
+                (37, 3),
+                (37, 6),
+                (37, 9)
+            ],
+            step.locked_candidates(),
+        );
     }
 
     /// Example: http://hodoku.sourceforge.net/en/show_example.php?file=n402&tech=Naked+Quadruple
@@ -211,6 +223,37 @@ mod tests {
         let strategy = NakedSubset::quadruple();
 
         let step = strategy.find(&sudoku).unwrap();
-        assert_eq!(10, step.eliminated_candidates().len());
+        assert_eq!(
+            &vec![
+                (54, 4),
+                (54, 6),
+                (55, 4),
+                (55, 6),
+                (55, 9),
+                (63, 4),
+                (72, 4),
+                (72, 6),
+                (73, 4),
+                (73, 6)
+            ],
+            step.eliminated_candidates(),
+        );
+        assert_eq!(
+            &vec![
+                (56, 4),
+                (56, 6),
+                (56, 7),
+                (56, 9),
+                (64, 4),
+                (64, 9),
+                (65, 4),
+                (65, 7),
+                (65, 9),
+                (74, 4),
+                (74, 6),
+                (74, 7)
+            ],
+            step.locked_candidates(),
+        );
     }
 }

@@ -1,6 +1,9 @@
 use itertools::Itertools;
 
-use crate::{Candidates, Cell, Sudoku, strategy::{step::Step, Strategy}};
+use crate::{
+    strategy::{step::Step, Strategy},
+    Candidates, Cell, Sudoku,
+};
 
 #[derive(Debug)]
 pub struct NakedSubset {
@@ -44,6 +47,14 @@ impl NakedSubset {
                 if subset.count() == self.count {
                     let mut step = Step::new();
 
+                    // TODO put the naked tuple as locked candidates in step!
+                    println!("SUBSET: {:?} - GROUP: {:?}", subset, group);
+                    for cell in &group {
+                        for candidate in cell.candidates().iter() {
+                            step.lock_candidate(cell.index(), candidate);
+                        }
+                    }
+
                     // for all cells outside the naked subset eliminate these candidates
                     neighbors
                         .iter()
@@ -56,7 +67,9 @@ impl NakedSubset {
                             }
                         });
 
-                    return Some(step);
+                    if !step.eliminated_candidates().is_empty() {
+                        return Some(step);
+                    }
                 }
             }
         }
@@ -80,7 +93,7 @@ impl Strategy for NakedSubset {
         }
 
         for block in sudoku.get_blocks() {
-            if let Some(step) = self.find_tuple( &block) {
+            if let Some(step) = self.find_tuple(&block) {
                 return Some(step);
             }
         }
@@ -120,8 +133,39 @@ mod tests {
         sudoku.init_candidates();
         let strategy = NakedSubset::pair();
 
-        // TODO test specific pair of candidates and cells
-        let _step = strategy.find(&sudoku).unwrap();
+        let step = strategy.find(&sudoku).unwrap();
+        println!("SUDOKU: {}", sudoku);
+        assert_eq!(&vec![(64, 3)], step.eliminated_candidates());
+        assert_eq!(
+            &vec![(65, 3), (65, 9), (66, 3), (66, 9)],
+            step.locked_candidates(),
+        );
+    }
+
+    /// Example: https://github.com/dimitri/sudoku/blob/master/top95.txt
+    #[test]
+    fn find_naked_subset_triple_with_issue() {
+        let sudoku = r"
+            4.....8.5
+            .3.......
+            ...7.....
+            .2.....6.
+            ....8.4..
+            ....1....
+            ...6.3.7.
+            5..2.....
+            1.4......
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        let strategy = NakedSubset::triple();
+
+        let step = strategy.find(&sudoku).unwrap();
+        assert_eq!(
+            &vec![(58, 9), (60, 2), (60, 9), (62, 2), (62, 8), (62, 9)],
+            step.eliminated_candidates(),
+        );
     }
 
     /// Example: http://hodoku.sourceforge.net/en/show_example.php?file=n301&tech=Naked+Triple
@@ -143,8 +187,20 @@ mod tests {
         sudoku.init_candidates();
         let strategy = NakedSubset::triple();
 
-        // TODO test specific pair of candidates and cells
-        let _step = strategy.find(&sudoku).unwrap();
+        let step = strategy.find(&sudoku).unwrap();
+        assert_eq!(&vec![(1, 6)], step.eliminated_candidates(),);
+        assert_eq!(
+            &vec![
+                (10, 3),
+                (10, 9),
+                (28, 6),
+                (28, 9),
+                (37, 3),
+                (37, 6),
+                (37, 9)
+            ],
+            step.locked_candidates(),
+        );
     }
 
     /// Example: http://hodoku.sourceforge.net/en/show_example.php?file=n402&tech=Naked+Quadruple
@@ -167,7 +223,37 @@ mod tests {
         let strategy = NakedSubset::quadruple();
 
         let step = strategy.find(&sudoku).unwrap();
-        dbg!(&step);
-        assert_eq!(10, step.eliminated_candidates().len());
+        assert_eq!(
+            &vec![
+                (54, 4),
+                (54, 6),
+                (55, 4),
+                (55, 6),
+                (55, 9),
+                (63, 4),
+                (72, 4),
+                (72, 6),
+                (73, 4),
+                (73, 6)
+            ],
+            step.eliminated_candidates(),
+        );
+        assert_eq!(
+            &vec![
+                (56, 4),
+                (56, 6),
+                (56, 7),
+                (56, 9),
+                (64, 4),
+                (64, 9),
+                (65, 4),
+                (65, 7),
+                (65, 9),
+                (74, 4),
+                (74, 6),
+                (74, 7)
+            ],
+            step.locked_candidates(),
+        );
     }
 }

@@ -67,7 +67,7 @@ impl fmt::Display for Sudoku {
         }).collect::<Vec<_>>();
 
         // print all rows
-        write!(f, "{}\n", line(&widths, "┏", "┯", "┓"))?;
+        write!(f, "\n{}\n", line(&widths, "┏", "┯", "┓"))?;
         for row in 0usize..9 {
             if row == 3 || row == 6 {
                 write!(f, "{}\n", line(&widths, "┠", "┼", "┨"))?;

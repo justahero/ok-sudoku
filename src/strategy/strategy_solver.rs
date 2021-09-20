@@ -1,6 +1,6 @@
-use crate::{solver::SolverError, Sudoku};
+use crate::{Solver, Sudoku, solver::SolverError};
 
-use super::{Strategy, algorithms::{HiddenSingle, HiddenSubset, LockedCandidate, NakedSingle, NakedSubset}, step::Step};
+use super::{Strategy, algorithms::{HiddenSingle, HiddenSubset, LockedCandidate, NakedSingle, NakedSubset, PointingTuple}, step::Step};
 
 /// The `StrategySolver` is the struct for solving Sudokus
 /// by applying logical strategies that humans can do.
@@ -20,9 +20,12 @@ impl StrategySolver {
     }
 
     /// Solve the Sudoku by applying solving steps.
-    pub fn solve(&self, sudoku: &Sudoku) -> Result<(Sudoku, Vec<Step>), SolverError> {
+    pub fn solve(&self, sudoku: &Sudoku, check_step: bool) -> Result<(Sudoku, Vec<Step>), SolverError> {
         let mut sudoku = sudoku.clone();
         sudoku.init_candidates();
+
+        println!("SOLVE: {}", sudoku);
+
         let mut steps = vec![];
 
         loop {
@@ -34,6 +37,10 @@ impl StrategySolver {
                 println!("STRATEGY: {:?}, STEP: {:?}", strategy.name(), step);
                 steps.push(step.clone());
                 self.apply(&step, &mut sudoku);
+
+                if check_step {
+                    Solver::find_unique(&sudoku)?;
+                }
             } else {
                 return Err(SolverError::Unsolvable);
             }
@@ -55,6 +62,7 @@ impl StrategySolver {
         self.push_strategy(Box::new(HiddenSubset::triple()));
         self.push_strategy(Box::new(HiddenSubset::quadruple()));
         self.push_strategy(Box::new(LockedCandidate::new()));
+        self.push_strategy(Box::new(PointingTuple::new()));
     }
 
     /// Adds a single strategy
@@ -63,7 +71,7 @@ impl StrategySolver {
     }
 
     /// Apply the step
-    /// TODO return Result with SolverError
+    /// TODO return Result with SolverError?
     pub fn apply(&self, step: &Step, sudoku: &mut Sudoku) {
         for (index, candidate) in step.eliminated_candidates() {
             sudoku.get_mut(*index).unset_candidate(*candidate);
@@ -87,13 +95,14 @@ mod tests {
         // A few sudokus found here: https://sandiway.arizona.edu/sudoku/examples.html
         #[rustfmt::skip]
         let sudokus = vec![
-            // TODO fix the solution of this one, looks like HiddenSingle is incorrect
-            r"...26.7.1 68..7..9. 19...45.. 82.1...4 ...46.29. ..5...3.2 8..93... 74.4..5.. 367.3.18...",
+            // r"...26.7.1 68..7..9. 19...45.. 82.1...4. ..46.29.. .5...3.28 ..93...74 .4..5..36 7.3.18...",
+            r"4.....8.5 .3....... ...7..... .2.....6. ....8.4.. ....1.... ...6.3.7. 5..2..... 1.4......",
         ];
 
         #[rustfmt::skip]
         let solutions = vec![
-            r"435269781 682571493 197834562 826195347 374682915 951743628 519326874 248957136 763418259",
+            // r"435269781 682571493 197834562 826195347 374682915 951743628 519326874 248957136 763418259",
+            r"417369825 632158947 958724316 825437169 791586432 346912758 289643571 573291684 164875293",
         ];
 
         let solver = StrategySolver::new();
@@ -102,7 +111,7 @@ mod tests {
             let sudoku = Sudoku::try_from(sudoku).unwrap();
             let solution = Sudoku::try_from(solution).unwrap();
 
-            let actual = solver.solve(&sudoku);
+            let actual = solver.solve(&sudoku, false);
             assert!(actual.is_ok());
             let (actual, _) = actual.unwrap();
             assert_eq!(solution, actual);

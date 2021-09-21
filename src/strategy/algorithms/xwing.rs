@@ -53,14 +53,22 @@ impl Strategy for XWing {
 
             // in case there is one wing, check if there are other candidates in these columns
             if let Some(rows) = rows {
-                /*
-                let step = Step::new();
-                return Some(step);
-                */
-
                 let (_, cols) = rows[0];
-                let rows = rows.iter().map(|&entry| entry.0).collect_vec();
-                println!("::: COLS: {:?}, ROWS: {:?}", cols, rows);
+                let rows = rows.iter().map(|&(&col, _)| col).collect_vec();
+                println!("::: CANDIDATE: {}, COLS: {:?}, ROWS: {:?}", candidate, cols, rows);
+
+                let eliminates = groups
+                    .iter()
+                    .filter(|&(_, list)| {
+                        list.iter().any(|&c| !cols.contains(&c))
+                    })
+                    .collect_vec();
+
+                if !eliminates.is_empty() {
+                    println!(":: ELIMINATES: {:?}", eliminates);
+                    let mut step = Step::new();
+                    return Some(step);
+                }
             }
         }
 
@@ -97,8 +105,8 @@ mod tests {
         sudoku.init_candidates();
         let strategy = XWing::new();
 
-        let step = strategy.find(&sudoku).unwrap();
         println!("SUDOKU: {}", sudoku);
+        let step = strategy.find(&sudoku).unwrap();
 
         assert_eq!(&vec![(31, 5)], step.eliminated_candidates());
         assert_eq!(

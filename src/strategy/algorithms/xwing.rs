@@ -2,7 +2,11 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 
-use crate::{Candidates, Sudoku, strategy::{Strategy, step::Step}, types::IndexVec};
+use crate::{
+    strategy::{step::Step, Strategy},
+    types::IndexVec,
+    Sudoku,
+};
 
 pub struct XWing {}
 
@@ -14,59 +18,71 @@ impl XWing {
 
 impl Strategy for XWing {
     fn find(&self, sudoku: &Sudoku) -> Option<Step> {
-
         // get all empty cells first
         let empty_cells = sudoku.iter().filter(|&cell| cell.is_empty()).collect_vec();
 
         // for each possible candidate
+        //for candidate in 1..=9 {
         for candidate in 1..=9 {
             // get all cells with same candidate in
             let cells = empty_cells
                 .iter()
                 .filter(|&cell| cell.has_candidate(candidate))
-                .map(|&cell| (cell.row(), cell.col()))
                 .collect_vec();
 
             // get all combinations of rows / cols
-            // let candidates = cells.iter().map(|&cell| (cell.row(), cell.col())).collect_vec();
-            let groups = cells.iter().fold(HashMap::new(), |mut result, (row, col)| {
-                if result.get(&row).is_none() {
-                    result.insert(row, vec![]);
+            let groups = cells.iter().fold(HashMap::new(), |mut result, &cell| {
+                if result.get(&cell.row()).is_none() {
+                    result.insert(cell.row(), vec![]);
                 }
-                if let Some(entries) = result.get_mut(&row) {
-                    entries.push(col);
+                if let Some(entries) = result.get_mut(&cell.row()) {
+                    entries.push(*cell);
                 }
                 result
             });
-            println!("CANDIDATE: {}, GROUPS: {:?}", candidate, groups);
+            println!(">> CANDIDATE: {}, GROUPS: {:?}", candidate, groups);
 
             // check if there are multiple rows with the same set of candidates
-            let rows = groups.iter().permutations(2).find(|rows| {
-                let candidates = rows.iter().fold(IndexVec::new(), |mut result, (_, list)| {
-                    list.iter().for_each(|&col| result.set(*col as u8));
-                    result
-                });
-                rows.len() >= 2 && candidates.count() == 2
-            });
+            let subset = groups
+                .iter()
+                .permutations(2)
+                .find(|rows| {
+                    let candidates =
+                        rows.iter()
+                            .fold(IndexVec::new(), |mut result, (_row, list)| {
+                                list.iter().for_each(|&cell| result.set(cell.col() as u8));
+                                result
+                            });
+                    rows.len() >= 2 && candidates.count() == 2
+                })
+                .map(|rows| rows.iter().map(|x| x.1).flatten().collect_vec());
 
-            println!("::: {:?}", rows);
+            println!(":: SUBSET {:?}", subset);
 
             // in case there is one wing, check if there are other candidates in these columns
-            if let Some(rows) = rows {
-                let (_, cols) = rows[0];
-                let rows = rows.iter().map(|&(&col, _)| col).collect_vec();
-                println!("::: CANDIDATE: {}, COLS: {:?}, ROWS: {:?}", candidate, cols, rows);
-
-                let eliminates = groups
+            if let Some(subset) = subset {
+                let eliminates = cells
                     .iter()
-                    .filter(|&(_, list)| {
-                        list.iter().any(|&c| !cols.contains(&c))
+                    .filter(|&neighbor| {
+                        println!("----- CELL: {:?}", neighbor);
+
+                        // find all cells that are shared by same column or row
+                        subset.iter().any(|&cell| {
+                            cell.col() == neighbor.col() || cell.row() == neighbor.row()
+                        })
                     })
+                    .filter(|&cell| !subset.iter().any(|&n| n.index() == cell.index()))
                     .collect_vec();
 
                 if !eliminates.is_empty() {
                     println!(":: ELIMINATES: {:?}", eliminates);
                     let mut step = Step::new();
+                    subset
+                        .iter()
+                        .for_each(|&c| step.lock_candidate(c.index(), candidate));
+                    eliminates
+                        .iter()
+                        .for_each(|&c| step.eliminate_candidate(c.index(), candidate));
                     return Some(step);
                 }
             }
@@ -84,7 +100,10 @@ impl Strategy for XWing {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{Sudoku, strategy::{Strategy, algorithms::xwing::XWing}};
+    use crate::{
+        strategy::{algorithms::xwing::XWing, Strategy},
+        Sudoku,
+    };
 
     /// See example: http://hodoku.sourceforge.net/en/tech_fishb.php
     #[test]

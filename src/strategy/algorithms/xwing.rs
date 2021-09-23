@@ -25,21 +25,17 @@ impl Strategy for XWing {
         //for candidate in 1..=9 {
         for candidate in 1..=9 {
             // get all cells with same candidate in
-            let cells = empty_cells
+            let cells = &empty_cells
                 .iter()
                 .filter(|&cell| cell.has_candidate(candidate))
                 .collect_vec();
 
-            // get all combinations of rows / cols
-            let groups = cells.iter().fold(HashMap::new(), |mut result, &cell| {
-                if result.get(&cell.row()).is_none() {
-                    result.insert(cell.row(), vec![]);
-                }
-                if let Some(entries) = result.get_mut(&cell.row()) {
-                    entries.push(*cell);
-                }
-                result
-            });
+            // get all cells by rows, merge with above?
+            let mut groups = Vec::new();
+            for (_, group) in &cells.into_iter().group_by(|&cell| cell.row()) {
+                groups.push(group.collect_vec());
+            }
+
             println!(">> CANDIDATE: {}, GROUPS: {:?}", candidate, groups);
 
             // check if there are multiple rows with the same set of candidates
@@ -49,13 +45,13 @@ impl Strategy for XWing {
                 .find(|rows| {
                     let candidates =
                         rows.iter()
-                            .fold(IndexVec::new(), |mut result, (_row, list)| {
+                            .fold(IndexVec::new(), |mut result, list| {
                                 list.iter().for_each(|&cell| result.set(cell.col() as u8));
                                 result
                             });
                     rows.len() >= 2 && candidates.count() == 2
                 })
-                .map(|rows| rows.iter().map(|x| x.1).flatten().collect_vec());
+                .map(|rows| rows.into_iter().flatten().collect_vec());
 
             println!(":: SUBSET {:?}", subset);
 

@@ -64,9 +64,6 @@ impl Strategy for XWing {
                 let eliminates = cells
                     .iter()
                     .filter(|&neighbor| {
-                        println!("----- CELL: {:?}", neighbor);
-
-                        // find all cells that are shared by same column or row
                         subset.iter().any(|&cell| {
                             cell.col() == neighbor.col() || cell.row() == neighbor.row()
                         })
@@ -77,12 +74,8 @@ impl Strategy for XWing {
                 if !eliminates.is_empty() {
                     println!(":: ELIMINATES: {:?}", eliminates);
                     let mut step = Step::new();
-                    subset
-                        .iter()
-                        .for_each(|&c| step.lock_candidate(c.index(), candidate));
-                    eliminates
-                        .iter()
-                        .for_each(|&c| step.eliminate_candidate(c.index(), candidate));
+                    subset.iter().for_each(|&c| step.lock_candidate(c.index(), candidate));
+                    eliminates.iter().for_each(|&c| step.eliminate_candidate(c.index(), candidate));
                     return Some(step);
                 }
             }

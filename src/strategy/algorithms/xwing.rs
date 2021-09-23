@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use itertools::Itertools;
 
 use crate::{
@@ -22,7 +20,6 @@ impl Strategy for XWing {
         let empty_cells = sudoku.iter().filter(|&cell| cell.is_empty()).collect_vec();
 
         // for each possible candidate
-        //for candidate in 1..=9 {
         for candidate in 1..=9 {
             // get all cells with same candidate in
             let cells = &empty_cells
@@ -30,30 +27,27 @@ impl Strategy for XWing {
                 .filter(|&cell| cell.has_candidate(candidate))
                 .collect_vec();
 
-            // get all cells by rows, merge with above?
+            // get all cells grouped by their rows
             let mut groups = Vec::new();
             for (_, group) in &cells.into_iter().group_by(|&cell| cell.row()) {
                 groups.push(group.collect_vec());
             }
 
-            println!(">> CANDIDATE: {}, GROUPS: {:?}", candidate, groups);
+            // TODO test to combine the nex two sections into a more readable for loop
 
             // check if there are multiple rows with the same set of candidates
             let subset = groups
                 .iter()
                 .permutations(2)
                 .find(|rows| {
-                    let candidates =
-                        rows.iter()
-                            .fold(IndexVec::new(), |mut result, list| {
-                                list.iter().for_each(|&cell| result.set(cell.col() as u8));
-                                result
-                            });
+                    let candidates = rows.iter().fold(IndexVec::new(), |mut result, list| {
+                        list.iter().for_each(|&cell| result.set(cell.col() as u8));
+                        result
+                    });
+
                     rows.len() >= 2 && candidates.count() == 2
                 })
                 .map(|rows| rows.into_iter().flatten().collect_vec());
-
-            println!(":: SUBSET {:?}", subset);
 
             // in case there is one wing, check if there are other candidates in these columns
             if let Some(subset) = subset {
@@ -68,10 +62,13 @@ impl Strategy for XWing {
                     .collect_vec();
 
                 if !eliminates.is_empty() {
-                    println!(":: ELIMINATES: {:?}", eliminates);
                     let mut step = Step::new();
-                    subset.iter().for_each(|&c| step.lock_candidate(c.index(), candidate));
-                    eliminates.iter().for_each(|&c| step.eliminate_candidate(c.index(), candidate));
+                    subset
+                        .iter()
+                        .for_each(|&c| step.lock_candidate(c.index(), candidate));
+                    eliminates
+                        .iter()
+                        .for_each(|&c| step.eliminate_candidate(c.index(), candidate));
                     return Some(step);
                 }
             }

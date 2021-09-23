@@ -27,6 +27,7 @@ impl StrategySolver {
         println!("SOLVE: {}", sudoku);
 
         let mut steps = vec![];
+        let mut count = 0usize;
 
         loop {
             if let Some((strategy, step)) = self
@@ -34,7 +35,9 @@ impl StrategySolver {
                 .iter()
                 .find_map(|strategy| strategy.find(&sudoku).map(|step| (strategy, step)))
             {
-                println!("STRATEGY: {:?}, STEP: {:?}", strategy.name(), step);
+                count += 1;
+
+                println!("STRATEGY ({:02}): {:?}, STEP: {:?}", count, strategy.name(), step);
                 steps.push(step.clone());
                 self.apply(&step, &mut sudoku);
 

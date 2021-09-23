@@ -254,4 +254,34 @@ mod tests {
             step.locked_candidates(),
         );
     }
+
+    #[test]
+    fn fix_naked_subset_pair() {
+        let sudoku = r"
+            ..81.....
+            5.392....
+            ...78.6..
+            145698237
+            .3.247.1.
+            7823..964
+            3.4869.5.
+            8..5..4.9
+            .5.4..386
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        sudoku.get_mut(23).unset_candidate(4);
+        sudoku.get_mut(26).unset_candidate(1);
+        sudoku.get_mut(26).unset_candidate(2);
+        sudoku.get_mut(5).unset_candidate(3);
+        sudoku.get_mut(5).unset_candidate(5);
+
+        println!("BEFORE: {}", sudoku);
+        let strategy = NakedSubset::pair();
+
+        let step = strategy.find(&sudoku);
+
+        dbg!(step);
+    }
 }

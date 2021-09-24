@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::{Candidates, Sudoku};
 
 /// The state of single cell on the board with either a digit or a list of candidates

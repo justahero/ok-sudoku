@@ -3,19 +3,20 @@ use itertools::Itertools;
 use crate::{
     strategy::{step::Step, Strategy},
     types::IndexVec,
-    Sudoku,
+    Cell, Sudoku,
 };
-
 pub struct XWing {}
 
 impl XWing {
     pub fn new() -> Self {
         Self {}
     }
-}
 
-impl Strategy for XWing {
-    fn find(&self, sudoku: &Sudoku) -> Option<Step> {
+    fn find_xwing<F, G>(&self, sudoku: &Sudoku, f: F, g: G) -> Option<Step>
+    where
+        F: Fn(&Cell) -> usize,
+        G: Fn(&Cell) -> usize,
+    {
         // get all empty cells first
         let empty_cells = sudoku.iter().filter(|&cell| cell.is_empty()).collect_vec();
 
@@ -27,9 +28,9 @@ impl Strategy for XWing {
                 .filter(|&cell| cell.has_candidate(candidate))
                 .collect_vec();
 
-            // get all cells grouped by their rows
+            // get all cells grouped by their lines
             let mut groups = Vec::new();
-            for (_, group) in &cells.into_iter().group_by(|&cell| cell.row()) {
+            for (_, group) in &cells.into_iter().group_by(|&cell| f(cell)) {
                 groups.push(group.collect_vec());
             }
 
@@ -37,7 +38,7 @@ impl Strategy for XWing {
             for lines in groups.iter().permutations(2) {
                 let mut indexes = IndexVec::new();
                 for line in &lines {
-                    line.iter().for_each(|&cell| indexes.set(cell.col() as u8));
+                    line.iter().for_each(|&cell| indexes.set(g(cell) as u8));
                 }
 
                 // at least two lines found, now check if there are any candidates to eliminate
@@ -68,6 +69,19 @@ impl Strategy for XWing {
                     }
                 }
             }
+        }
+
+        None
+    }
+}
+
+impl Strategy for XWing {
+    fn find(&self, sudoku: &Sudoku) -> Option<Step> {
+        if let Some(step) = self.find_xwing(sudoku, |c| c.row(), |c| c.col()) {
+            return Some(step);
+        }
+        if let Some(step) = self.find_xwing(sudoku, |c| c.col(), |c| c.row()) {
+            return Some(step);
         }
 
         None
@@ -137,6 +151,7 @@ mod tests {
 
         println!("SUDOKU: {}", sudoku);
         let step = strategy.find(&sudoku).unwrap();
+        println!("STEP: {:?}", step);
 
         assert_eq!(
             &vec![

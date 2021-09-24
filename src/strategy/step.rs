@@ -1,5 +1,7 @@
 /// A single solving step to either eliminate candidate or find digit
 ///
+/// TODO check if instead of `u8` the `Candidates` struct is more useful here
+///
 #[derive(Debug, Clone, PartialEq)]
 pub struct Step {
     /// The cell index to set digit

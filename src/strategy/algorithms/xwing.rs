@@ -33,43 +33,39 @@ impl Strategy for XWing {
                 groups.push(group.collect_vec());
             }
 
-            // TODO test to combine the nex two sections into a more readable for loop
+            // for each tuple of lines check if there is a xwing
+            for lines in groups.iter().permutations(2) {
+                let mut indexes = IndexVec::new();
+                for line in &lines {
+                    line.iter().for_each(|&cell| indexes.set(cell.col() as u8));
+                }
 
-            // check if there are multiple rows with the same set of candidates
-            let subset = groups
-                .iter()
-                .permutations(2)
-                .find(|rows| {
-                    let candidates = rows.iter().fold(IndexVec::new(), |mut result, list| {
-                        list.iter().for_each(|&cell| result.set(cell.col() as u8));
-                        result
-                    });
-
-                    rows.len() >= 2 && candidates.count() == 2
-                })
-                .map(|rows| rows.into_iter().flatten().collect_vec());
-
-            // in case there is one wing, check if there are other candidates in these columns
-            if let Some(subset) = subset {
-                let eliminates = cells
-                    .iter()
-                    .filter(|&neighbor| {
-                        subset.iter().any(|&cell| {
+                // at least two lines found, now check if there are any candidates to eliminate
+                // along same lines
+                if indexes.count() == 2 {
+                    let mut eliminates = Vec::new();
+                    let subset = lines.into_iter().flatten().collect_vec();
+                    for neighbor in cells {
+                        if subset.iter().any(|&cell| {
                             cell.col() == neighbor.col() || cell.row() == neighbor.row()
-                        })
-                    })
-                    .filter(|&cell| !subset.iter().any(|&n| n.index() == cell.index()))
-                    .collect_vec();
+                        }) {
+                            if !subset.iter().any(|&cell| cell.index() == neighbor.index()) {
+                                eliminates.push(neighbor);
+                            }
+                        }
+                    }
 
-                if !eliminates.is_empty() {
-                    let mut step = Step::new();
-                    subset
-                        .iter()
-                        .for_each(|&c| step.lock_candidate(c.index(), candidate));
-                    eliminates
-                        .iter()
-                        .for_each(|&c| step.eliminate_candidate(c.index(), candidate));
-                    return Some(step);
+                    // xwing found, eliminate candidates and lock candidates of subset cells
+                    if !eliminates.is_empty() {
+                        let mut step = Step::new();
+                        subset
+                            .iter()
+                            .for_each(|&l| step.lock_candidate(l.index(), candidate));
+                        eliminates
+                            .iter()
+                            .for_each(|&e| step.eliminate_candidate(e.index(), candidate));
+                        return Some(step);
+                    }
                 }
             }
         }
@@ -134,5 +130,31 @@ mod tests {
             249.87..5
             518.2...7
         ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        let strategy = XWing::new();
+
+        println!("SUDOKU: {}", sudoku);
+        let step = strategy.find(&sudoku).unwrap();
+
+        assert_eq!(
+            &vec![
+                (12, 1),
+                (15, 1),
+                (16, 1),
+                (17, 1),
+                (38, 1),
+                (39, 1),
+                (42, 1),
+                (43, 1),
+                (44, 1),
+            ],
+            step.eliminated_candidates(),
+        );
+        assert_eq!(
+            &vec![(9, 1), (13, 1), (36, 1), (40, 1)],
+            step.locked_candidates(),
+        );
     }
 }

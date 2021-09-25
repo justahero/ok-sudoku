@@ -2,7 +2,7 @@ use crate::{solver::SolverError, Solver, Sudoku};
 
 use super::{
     algorithms::{
-        HiddenSingle, HiddenSubset, LockedCandidate, NakedSingle, NakedSubset, PointingTuple, Swordfish, XWing,
+        HiddenSingle, HiddenSubset, Jellyfish, LockedCandidate, NakedSingle, NakedSubset, PointingTuple, Swordfish, XWing,
     },
     step::Step,
     Strategy,
@@ -83,6 +83,7 @@ impl StrategySolver {
         self.push_strategy(Box::new(PointingTuple::new()));
         self.push_strategy(Box::new(XWing::new()));
         self.push_strategy(Box::new(Swordfish::new()));
+        self.push_strategy(Box::new(Jellyfish::new()));
     }
 
     /// Adds a single strategy

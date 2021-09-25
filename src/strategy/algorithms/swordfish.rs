@@ -1,94 +1,21 @@
-use itertools::Itertools;
+use crate::{Sudoku, strategy::{step::Step, Strategy}};
 
-use crate::{Cell, Sudoku, strategy::{Strategy, step::Step}, types::IndexVec};
+use super::find_fish;
 
-pub struct Swordfish {
-    size: usize,
-}
+pub struct Swordfish {}
 
 impl Swordfish {
     pub fn new() -> Self {
-        Self { size: 3 }
-    }
-
-    fn find_fish<F, G>(&self, sudoku: &Sudoku, f: F, g: G) -> Option<Step>
-    where
-        F: Fn(&Cell) -> usize,
-        G: Fn(&Cell) -> usize,
-    {
-        // get all empty cells first
-        let empty_cells = sudoku.iter().filter(|&cell| cell.is_empty()).collect_vec();
-
-        // for each possible candidate
-        for candidate in 1..=9 {
-            // get all cells with same candidate in
-            let cells = &empty_cells
-                .iter()
-                .filter(|&cell| cell.has_candidate(candidate))
-                .collect_vec();
-
-            // get all cells grouped by their lines
-            let groups = cells
-                .iter()
-                .into_group_map_by(|&cell| f(cell))
-                .into_iter()
-                .map(|(_, line)| line.to_vec())
-                .filter(|line| line.len() >= 2)
-                .collect_vec();
-
-            if groups.len() < self.size {
-                continue;
-            }
-
-            // for each tuple of lines check if there is a xwing
-            for lines in groups.iter().permutations(self.size) {
-                let mut indexes = IndexVec::new();
-                for line in &lines {
-                    line.iter().for_each(|&cell| indexes.set(g(cell) as u8));
-                }
-
-                // at least two lines found, now check if there are any candidates to eliminate
-                // along same lines
-                if indexes.count() == self.size as u8 {
-                    let mut eliminates = Vec::new();
-                    let subset = lines.into_iter().flatten().collect_vec();
-                    for neighbor in cells {
-                        if subset.iter().any(|&cell| {
-                            cell.col() == neighbor.col() || cell.row() == neighbor.row()
-                        }) {
-                            if !subset.iter().any(|&cell| cell.index() == neighbor.index()) {
-                                eliminates.push(neighbor);
-                            }
-                        }
-                    }
-
-                    // xwing found, eliminate candidates and lock candidates of subset cells
-                    if !eliminates.is_empty() {
-                        let mut step = Step::new();
-                        subset
-                            .iter()
-                            .sorted_by(|&l, &r| l.index().cmp(&r.index()))
-                            .for_each(|&l| step.lock_candidate(l.index(), candidate));
-                        eliminates
-                            .iter()
-                            .sorted_by(|&l, &r| l.index().cmp(&r.index()))
-                            .for_each(|&e| step.eliminate_candidate(e.index(), candidate));
-                        return Some(step);
-                    }
-                }
-            }
-        }
-
-        None
+        Self {}
     }
 }
 
 impl Strategy for Swordfish {
     fn find(&self, sudoku: &Sudoku) -> Option<Step> {
-        if let Some(step) = self.find_fish(sudoku, |c| c.row(), |c| c.col()) {
+        if let Some(step) = find_fish(3, sudoku, |c| c.row(), |c| c.col()) {
             return Some(step);
         }
-        if let Some(step) = self.find_fish(sudoku, |c| c.col(), |c| c.row()) {
+        if let Some(step) = find_fish(3, sudoku, |c| c.col(), |c| c.row()) {
             return Some(step);
         }
 
@@ -104,7 +31,10 @@ impl Strategy for Swordfish {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{Sudoku, strategy::{Strategy, algorithms::Swordfish}};
+    use crate::{
+        strategy::{algorithms::Swordfish, Strategy},
+        Sudoku,
+    };
 
     /// Example found here: http://hodoku.sourceforge.net/en/show_example.php?file=bf301&tech=Swordfish
     #[test]
@@ -129,14 +59,7 @@ mod tests {
 
         assert_eq!(&vec![(52, 2), (54, 2)], step.eliminated_candidates());
         assert_eq!(
-            &vec![
-                (9, 2),
-                (13, 2),
-                (22, 2),
-                (25, 2),
-                (72, 2),
-                (79, 2),
-            ],
+            &vec![(9, 2), (13, 2), (22, 2), (25, 2), (72, 2), (79, 2),],
             step.locked_candidates(),
         );
     }
@@ -160,9 +83,8 @@ mod tests {
     /// This grid is taken from: https://www.youtube.com/watch?v=9m9t8ie9-EE
     #[test]
     fn ignores_xwings() {
-        let sudokus = [
-            r"5..27134....6.3....3.8.9..7..3..7.....7..8.3.6..31472..8.79...3...3..6.....1..5..",
-        ];
+        let sudokus =
+            [r"5..27134....6.3....3.8.9..7..3..7.....7..8.3.6..31472..8.79...3...3..6.....1..5.."];
 
         let strategy = Swordfish::new();
         for sudoku in sudokus.iter() {

@@ -141,6 +141,22 @@ mod tests {
         );
     }
 
+    #[test]
+    fn find_swordfish_in_multiple_sudokus() {
+        let sudokus = [
+            r"926...1.. 537.1.42. 841...6.3 259734816 714.6..3. 36812..4. 1.2....82 485.7136. 6.3.....1",
+            r".2..43.69 ..38962.. 96..25.3. 89.56..13 6...3.... .3..81.26 3...1..7. ..96743.2 27.358.9.",
+        ];
+
+        let strategy = Swordfish::new();
+        for sudoku in sudokus.iter() {
+            let mut sudoku = Sudoku::try_from(*sudoku).unwrap();
+            sudoku.init_candidates();
+
+            assert!(strategy.find(&sudoku).is_some());
+        }
+    }
+
     /// See example: https://www.sudokuwiki.org/X_Wing_Strategy
     #[test]
     fn ignores_xwing() {

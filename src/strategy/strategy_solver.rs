@@ -60,7 +60,11 @@ impl StrategySolver {
                     Solver::find_unique(&sudoku)?;
                 }
             } else {
-                return Err(SolverError::Unsolvable);
+                // no strategy found a step, check if the sudoku can be solved
+                match Solver::find_unique(&sudoku) {
+                    Ok(_) => return Err(SolverError::StrategyNotFound),
+                    Err(err) => return Err(err),
+                }
             }
 
             if sudoku.is_solved() {

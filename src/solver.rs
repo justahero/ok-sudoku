@@ -4,6 +4,8 @@ use crate::sudoku::Sudoku;
 
 #[derive(Debug, PartialEq)]
 pub enum SolverError {
+    /// There exists a single solution but there is no strategy that finds the next step
+    StrategyNotFound,
     /// There is no single solution found
     Unsolvable,
     /// There is more than one solution
@@ -15,6 +17,7 @@ pub enum SolverError {
 impl fmt::Display for SolverError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
+            SolverError::StrategyNotFound => format!("No suitable strategy found, but solution exists."),
             SolverError::Unsolvable => format!("No solution found."),
             SolverError::TooManySolutions(n) => {
                 format!("There is no unique solution (count: {})", n)

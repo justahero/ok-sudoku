@@ -29,10 +29,13 @@ impl XWing {
                 .collect_vec();
 
             // get all cells grouped by their lines
-            let mut groups = Vec::new();
-            for (_, group) in &cells.into_iter().group_by(|&cell| f(cell)) {
-                groups.push(group.collect_vec());
-            }
+            let groups = cells
+                .iter()
+                .into_group_map_by(|&cell| f(cell))
+                .into_iter()
+                .map(|(_, line)| line.to_vec())
+                .filter(|line| line.len() >= 2)
+                .collect_vec();
 
             // for each tuple of lines check if there is a xwing
             for lines in groups.iter().permutations(2) {
@@ -61,6 +64,7 @@ impl XWing {
                         let mut step = Step::new();
                         subset
                             .iter()
+                            .sorted_by(|&l, &r| l.index().cmp(&r.index()))
                             .for_each(|&l| step.lock_candidate(l.index(), candidate));
                         eliminates
                             .iter()
@@ -120,7 +124,6 @@ mod tests {
         sudoku.init_candidates();
         let strategy = XWing::new();
 
-        println!("SUDOKU: {}", sudoku);
         let step = strategy.find(&sudoku).unwrap();
 
         assert_eq!(&vec![(31, 5)], step.eliminated_candidates());
@@ -149,10 +152,7 @@ mod tests {
         sudoku.init_candidates();
         let strategy = XWing::new();
 
-        println!("SUDOKU: {}", sudoku);
         let step = strategy.find(&sudoku).unwrap();
-        println!("STEP: {:?}", step);
-
         assert_eq!(
             &vec![
                 (12, 1),
@@ -171,5 +171,27 @@ mod tests {
             &vec![(9, 1), (13, 1), (36, 1), (40, 1)],
             step.locked_candidates(),
         );
+    }
+
+    #[test]
+    fn does_not_find_xwing() {
+        // It's a naked subset example
+        let sudoku = r"
+            7..849.3.
+            928135..6
+            4..267.89
+            642783951
+            397451628
+            8156923..
+            2.4516.93
+            1....8.6.
+            5....4.1.
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        let strategy = XWing::new();
+
+        assert_eq!(None, strategy.find(&sudoku));
     }
 }

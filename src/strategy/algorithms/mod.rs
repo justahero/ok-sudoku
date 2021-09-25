@@ -4,6 +4,7 @@ mod naked_subset;
 mod hidden_subset;
 mod locked_candidate;
 mod pointing_tuple;
+mod swordfish;
 mod xwing;
 
 pub(crate) use hidden_single::HiddenSingle;

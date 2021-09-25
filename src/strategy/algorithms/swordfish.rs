@@ -1,3 +1,6 @@
+use itertools::Itertools;
+
+use crate::{Cell, Sudoku, strategy::{Strategy, step::Step}, types::IndexVec};
 
 pub struct Swordfish {
     size: usize,
@@ -68,6 +71,7 @@ impl Swordfish {
                             .for_each(|&l| step.lock_candidate(l.index(), candidate));
                         eliminates
                             .iter()
+                            .sorted_by(|&l, &r| l.index().cmp(&r.index()))
                             .for_each(|&e| step.eliminate_candidate(e.index(), candidate));
                         return Some(step);
                     }
@@ -79,7 +83,7 @@ impl Swordfish {
     }
 }
 
-impl Strategy for XWing {
+impl Strategy for Swordfish {
     fn find(&self, sudoku: &Sudoku) -> Option<Step> {
         if let Some(step) = self.find_fish(sudoku, |c| c.row(), |c| c.col()) {
             return Some(step);
@@ -98,23 +102,58 @@ impl Strategy for XWing {
 
 #[cfg(test)]
 mod tests {
+    use std::convert::TryFrom;
+
+    use crate::{Sudoku, strategy::{Strategy, algorithms::Swordfish}};
+
+    /// Example found here: http://hodoku.sourceforge.net/en/show_example.php?file=bf301&tech=Swordfish
     #[test]
     fn find_swordfish() {
+        let sudoku = r"
+            16.543.7.
+            .786.1435
+            4358.76.1
+            72.458.69
+            6..912.57
+            ...376..4
+            .16.3..4.
+            3...8..16
+            ..71645.3
+        ";
 
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        let strategy = Swordfish::new();
+
+        let step = strategy.find(&sudoku).unwrap();
+
+        assert_eq!(&vec![(52, 2), (54, 2)], step.eliminated_candidates());
+        assert_eq!(
+            &vec![
+                (9, 2),
+                (13, 2),
+                (22, 2),
+                (25, 2),
+                (72, 2),
+                (79, 2),
+            ],
+            step.locked_candidates(),
+        );
     }
 
+    /// See example: https://www.sudokuwiki.org/X_Wing_Strategy
     #[test]
     fn ignores_xwing() {
         let sudoku = r"
-            .41729.3.
-            760..34.2
-            .3264.719
-            4.39..17.
-            6.7..49.3
-            19537..24
-            214567398
-            376.9.541
-            958431267
+            1.....569
+            492.561.8
+            .561.924.
+            ..964.8.1
+            .64.1....
+            218.356.4
+            .4.5...16
+            9.5.614.2
+            621.....5
         ";
 
         let mut sudoku = Sudoku::try_from(sudoku).unwrap();

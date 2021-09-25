@@ -1,20 +1,13 @@
-use itertools::Itertools;
 
-use crate::{
-    strategy::{step::Step, Strategy},
-    types::IndexVec,
-    Cell, Sudoku,
-};
-pub struct XWing {
+pub struct Swordfish {
     size: usize,
 }
 
-impl XWing {
+impl Swordfish {
     pub fn new() -> Self {
-        Self { size: 2 }
+        Self { size: 3 }
     }
 
-    /// TODO move this function, use it in different fish subsets
     fn find_fish<F, G>(&self, sudoku: &Sudoku, f: F, g: G) -> Option<Step>
     where
         F: Fn(&Cell) -> usize,
@@ -105,16 +98,13 @@ impl Strategy for XWing {
 
 #[cfg(test)]
 mod tests {
-    use std::convert::TryFrom;
-
-    use crate::{
-        strategy::{algorithms::xwing::XWing, Strategy},
-        Sudoku,
-    };
-
-    /// See example: http://hodoku.sourceforge.net/en/tech_fishb.php
     #[test]
-    fn find_xwing_in_rows() {
+    fn find_swordfish() {
+
+    }
+
+    #[test]
+    fn ignores_xwing() {
         let sudoku = r"
             .41729.3.
             760..34.2
@@ -129,75 +119,7 @@ mod tests {
 
         let mut sudoku = Sudoku::try_from(sudoku).unwrap();
         sudoku.init_candidates();
-        let strategy = XWing::new();
-
-        let step = strategy.find(&sudoku).unwrap();
-
-        assert_eq!(&vec![(31, 5)], step.eliminated_candidates());
-        assert_eq!(
-            &vec![(13, 5), (16, 5), (40, 5), (43, 5)],
-            step.locked_candidates(),
-        );
-    }
-
-    /// See example: http://hodoku.sourceforge.net/en/tech_fishb.php
-    #[test]
-    fn find_xwing_in_columns() {
-        let sudoku = r"
-            98..62753
-            .65..3...
-            327.5...6
-            79..3.5..
-            .5...9...
-            832.45..9
-            673591428
-            249.87..5
-            518.2...7
-        ";
-
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
-        let strategy = XWing::new();
-
-        let step = strategy.find(&sudoku).unwrap();
-        assert_eq!(
-            &vec![
-                (12, 1),
-                (15, 1),
-                (16, 1),
-                (17, 1),
-                (38, 1),
-                (39, 1),
-                (42, 1),
-                (43, 1),
-                (44, 1),
-            ],
-            step.eliminated_candidates(),
-        );
-        assert_eq!(
-            &vec![(9, 1), (13, 1), (36, 1), (40, 1)],
-            step.locked_candidates(),
-        );
-    }
-
-    #[test]
-    fn does_not_find_xwing() {
-        // It's a naked subset example
-        let sudoku = r"
-            7..849.3.
-            928135..6
-            4..267.89
-            642783951
-            397451628
-            8156923..
-            2.4516.93
-            1....8.6.
-            5....4.1.
-        ";
-
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
-        let strategy = XWing::new();
+        let strategy = Swordfish::new();
 
         assert_eq!(None, strategy.find(&sudoku));
     }

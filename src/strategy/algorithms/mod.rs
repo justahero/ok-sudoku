@@ -12,6 +12,8 @@ pub(crate) use naked_single::NakedSingle;
 pub(crate) use naked_subset::NakedSubset;
 pub(crate) use locked_candidate::LockedCandidate;
 pub(crate) use pointing_tuple::PointingTuple;
+pub(crate) use swordfish::Swordfish;
+pub(crate) use xwing::XWing;
 
 use itertools::Itertools;
 use crate::{Cell, strategy::step::Step};

@@ -5,13 +5,16 @@ use crate::{
     types::IndexVec,
     Cell, Sudoku,
 };
-pub struct XWing {}
+pub struct XWing {
+    size: usize,
+}
 
 impl XWing {
     pub fn new() -> Self {
-        Self {}
+        Self { size: 2 }
     }
 
+    /// TODO move this function, use it in different fish subsets
     fn find_xwing<F, G>(&self, sudoku: &Sudoku, f: F, g: G) -> Option<Step>
     where
         F: Fn(&Cell) -> usize,
@@ -37,8 +40,12 @@ impl XWing {
                 .filter(|line| line.len() >= 2)
                 .collect_vec();
 
+            if groups.len() < self.size {
+                continue;
+            }
+
             // for each tuple of lines check if there is a xwing
-            for lines in groups.iter().permutations(2) {
+            for lines in groups.iter().permutations(self.size) {
                 let mut indexes = IndexVec::new();
                 for line in &lines {
                     line.iter().for_each(|&cell| indexes.set(g(cell) as u8));
@@ -46,7 +53,7 @@ impl XWing {
 
                 // at least two lines found, now check if there are any candidates to eliminate
                 // along same lines
-                if indexes.count() == 2 {
+                if indexes.count() == self.size as u8 {
                     let mut eliminates = Vec::new();
                     let subset = lines.into_iter().flatten().collect_vec();
                     for neighbor in cells {

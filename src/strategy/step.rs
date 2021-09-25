@@ -1,7 +1,6 @@
 /// A single solving step to either eliminate candidate or find digit
 ///
-/// TODO refine this struct to accomodate most of the strategies
-/// TODO add house (box, row or col) as information to determine what led to elimination?
+/// TODO check if instead of `u8` the `Candidates` struct is more useful here
 ///
 #[derive(Debug, Clone, PartialEq)]
 pub struct Step {

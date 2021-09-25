@@ -1,4 +1,4 @@
-use crate::Candidates;
+use crate::{Candidates, Sudoku};
 
 /// The state of single cell on the board with either a digit or a list of candidates
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -181,6 +181,16 @@ impl Cell {
     /// Returns the associated index with this cell
     pub fn index(&self) -> usize {
         self.index
+    }
+
+    /// Returns the row this cell is in
+    pub fn row(&self) -> usize {
+        self.index / Sudoku::ROWS as usize
+    }
+
+    /// Returns the column this cell is in
+    pub fn col(&self) -> usize {
+        self.index % Sudoku::COLS as usize
     }
 }
 

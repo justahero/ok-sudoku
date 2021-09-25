@@ -1,46 +1,8 @@
 use std::{collections::HashMap, fmt::Debug};
 
-use bit_vec::BitVec;
 use itertools::Itertools;
 
-use crate::{
-    strategy::{step::Step, Strategy},
-    Cell, Sudoku,
-};
-
-/// A Bit Vec indicating which indexes a candidate is in.
-#[derive(Clone, PartialEq, Eq)]
-struct IndexVec(BitVec);
-
-impl IndexVec {
-    pub fn new() -> Self {
-        Self(BitVec::from_elem(82, false))
-    }
-
-    pub fn set(&mut self, index: u8) {
-        self.0.set(index as usize, true);
-    }
-
-    /// Returns the number of set indexes
-    pub fn count(&self) -> u8 {
-        self.0.iter().filter(|v| *v).count() as u8
-    }
-
-    /// Returns an iterator over all indexes
-    pub fn iter(&self) -> impl Iterator<Item = u8> + '_ {
-        self.0
-            .iter()
-            .enumerate()
-            .filter(|(_index, v)| *v)
-            .map(|(index, _)| index as u8)
-    }
-}
-
-impl Debug for IndexVec {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({})", self.iter().join(", "))
-    }
-}
+use crate::{Cell, Sudoku, strategy::{step::Step, Strategy}, types::IndexVec};
 
 #[derive(Debug)]
 pub struct HiddenSubset {

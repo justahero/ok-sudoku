@@ -157,25 +157,19 @@ mod tests {
         }
     }
 
-    /// See example: https://www.sudokuwiki.org/X_Wing_Strategy
+    /// This grid is taken from: https://www.youtube.com/watch?v=9m9t8ie9-EE
     #[test]
-    fn ignores_xwing() {
-        let sudoku = r"
-            1.....569
-            492.561.8
-            .561.924.
-            ..964.8.1
-            .64.1....
-            218.356.4
-            .4.5...16
-            9.5.614.2
-            621.....5
-        ";
+    fn ignores_xwings() {
+        let sudokus = [
+            r"5..27134....6.3....3.8.9..7..3..7.....7..8.3.6..31472..8.79...3...3..6.....1..5..",
+        ];
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
         let strategy = Swordfish::new();
+        for sudoku in sudokus.iter() {
+            let mut sudoku = Sudoku::try_from(*sudoku).unwrap();
+            sudoku.init_candidates();
 
-        assert_eq!(None, strategy.find(&sudoku));
+            assert!(strategy.find(&sudoku).is_none());
+        }
     }
 }

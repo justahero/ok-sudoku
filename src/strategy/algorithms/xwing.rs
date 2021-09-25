@@ -180,6 +180,22 @@ mod tests {
         );
     }
 
+    /// A few examples
+    #[test]
+    fn detect_xwing_in_sudokus() {
+        let sudokus = [
+            r"5..27134....6.3....3.8.9..7..3..7.....7..8.3.6..31472..8.79...3...3..6.....1..5..",
+        ];
+
+        let strategy = XWing::new();
+        for sudoku in sudokus.iter() {
+            let mut sudoku = Sudoku::try_from(*sudoku).unwrap();
+            sudoku.init_candidates();
+
+            assert!(strategy.find(&sudoku).is_some());
+        }
+    }
+
     #[test]
     fn does_not_find_xwing() {
         // It's a naked subset example

@@ -9,6 +9,7 @@ An okay-ish soduku program to experiment with algorithms & additional logical la
 ## Test Sudokus
 
 * [Invalid Test Cases](http://sudopedia.enjoysudoku.com/Invalid_Test_Cases.html)
+* [List of Hardest Sudokus](https://github.com/t-dillon/tdoku/tree/master/benchmarks)
 
 ## References:
 

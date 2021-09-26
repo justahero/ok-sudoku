@@ -177,4 +177,16 @@ mod tests {
             .iter()
             .all(|solution| expected.contains(solution)));
     }
+
+    #[test]
+    fn solve_sudokus() {
+        let sudokus = [
+            r"...1.4.96 ..9....1. 1.59..... ..4..1972 .18792.3. 2974..1.8 ...2.83.9 48.379... 9..5.678.",
+        ];
+
+        for sudoku in sudokus.iter() {
+            let sudoku = Sudoku::try_from(*sudoku).unwrap();
+            assert!(Solver::find_unique(&sudoku).is_ok());
+        }
+    }
 }

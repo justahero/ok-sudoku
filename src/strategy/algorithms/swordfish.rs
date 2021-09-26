@@ -82,9 +82,13 @@ mod tests {
 
     /// This grid is taken from: https://www.youtube.com/watch?v=9m9t8ie9-EE
     #[test]
-    fn ignores_xwings() {
-        let sudokus =
-            [r"5..27134....6.3....3.8.9..7..3..7.....7..8.3.6..31472..8.79...3...3..6.....1..5.."];
+    fn ignores_other_fishes() {
+        let sudokus = [
+            // xwing
+            r"5..27134....6.3....3.8.9..7..3..7.....7..8.3.6..31472..8.79...3...3..6.....1..5..",
+            // jellyfish
+            r"2.......3.8..3..5...34.21....12.54......9......93.86....25.69...9..2..7.4.......1",
+        ];
 
         let strategy = Swordfish::new();
         for sudoku in sudokus.iter() {

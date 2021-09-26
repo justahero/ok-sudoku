@@ -30,10 +30,7 @@ impl Strategy for XWing {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{
-        strategy::{algorithms::xwing::XWing, Strategy},
-        Sudoku,
-    };
+    use crate::{Sudoku, strategy::{Strategy, algorithms::{Swordfish, xwing::XWing}}};
 
     /// See example: http://hodoku.sourceforge.net/en/tech_fishb.php
     #[test]
@@ -120,24 +117,21 @@ mod tests {
     }
 
     #[test]
-    fn does_not_find_xwing() {
-        // It's a naked subset example
-        let sudoku = r"
-            7..849.3.
-            928135..6
-            4..267.89
-            642783951
-            397451628
-            8156923..
-            2.4516.93
-            1....8.6.
-            5....4.1.
-        ";
+    fn ignores_other_fishes() {
+        let sudokus = [
+            // Swordfish
+            r"16.543.7..786.14354358.76.172.458.696..912.57...376..4.16.3..4.3...8..16..71645.3",
+        ];
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
         let strategy = XWing::new();
+        for sudoku in sudokus.iter() {
+            let mut sudoku = Sudoku::try_from(*sudoku).unwrap();
+            sudoku.init_candidates();
 
-        assert_eq!(None, strategy.find(&sudoku));
+            println!("SUDOKU: {}", sudoku);
+            let step = strategy.find(&sudoku);
+            println!("STEP: {:?}", step);
+            assert_eq!(None, step);
+        }
     }
 }

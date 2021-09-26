@@ -86,4 +86,22 @@ mod tests {
             step.locked_candidates(),
         );
     }
+
+    #[test]
+    fn ignores_other_fishes() {
+        let sudokus = [
+            // Swordfish
+            r"16.543.7. .786.1435 4358.76.1 72.458.69 6..912.57 ...376..4 .16.3..4. 3...8..16 ..71645.3",
+        ];
+
+        let strategy = Jellyfish::new();
+        for sudoku in sudokus.iter() {
+            let mut sudoku = Sudoku::try_from(*sudoku).unwrap();
+            sudoku.init_candidates();
+
+            println!("SUDOKU: {}", sudoku);
+            let step = strategy.find(&sudoku);
+            assert_eq!(None, step);
+        }
+    }
 }

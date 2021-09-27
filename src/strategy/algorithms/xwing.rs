@@ -30,7 +30,7 @@ impl Strategy for XWing {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{Sudoku, strategy::{Strategy, algorithms::{Swordfish, xwing::XWing}}};
+    use crate::{Sudoku, strategy::{Strategy, algorithms::xwing::XWing}};
 
     /// See example: http://hodoku.sourceforge.net/en/tech_fishb.php
     #[test]

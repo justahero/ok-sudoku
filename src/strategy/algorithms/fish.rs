@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use crate::{Cell, Sudoku, strategy::step::Step, types::IndexVec};
+use crate::{Cell, Sudoku, strategy::step::Step};
 
 /// Finds a fish in the Sudoku
 pub(crate) fn find_fish<F, G>(size: usize, sudoku: &Sudoku, f: F, g: G) -> Option<Step>
@@ -34,14 +34,23 @@ where
 
         // for each tuple of lines check if there is a xwing
         for lines in groups.iter().permutations(size) {
-            let mut indexes = IndexVec::new();
+            let mut indexes = [0u8; 9];
             for line in &lines {
-                line.iter().for_each(|&cell| indexes.set(g(cell) as u8));
+                line.iter().for_each(|&cell| indexes[g(cell)] += 1);
             }
 
-            // at least two lines found, now check if there are any candidates to eliminate
-            // along same lines
-            if indexes.count() == size as u8 {
+            let indexes = indexes.iter().filter(|&index| *index > 0).collect_vec();
+            if indexes.len() > size {
+                continue;
+            }
+
+            // Check that each intersecting line contains at least 2 overlapping entries
+            let result = indexes
+                .iter()
+                .filter(|&&index| *index >= 2)
+                .count();
+
+            if result == size {
                 let mut eliminates = Vec::new();
                 let subset = lines.into_iter().flatten().collect_vec();
                 for neighbor in cells {

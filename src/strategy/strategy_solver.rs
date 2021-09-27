@@ -1,6 +1,12 @@
-use crate::{Solver, Sudoku, solver::SolverError};
+use crate::{solver::SolverError, Solver, Sudoku};
 
-use super::{Strategy, algorithms::{HiddenSingle, HiddenSubset, LockedCandidate, NakedSingle, NakedSubset, PointingTuple}, step::Step};
+use super::{
+    algorithms::{
+        HiddenSingle, HiddenSubset, Jellyfish, LockedCandidate, NakedSingle, NakedSubset, PointingTuple, Swordfish, XWing,
+    },
+    step::Step,
+    Strategy,
+};
 
 /// The `StrategySolver` is the struct for solving Sudokus
 /// by applying logical strategies that humans can do.
@@ -20,7 +26,11 @@ impl StrategySolver {
     }
 
     /// Solve the Sudoku by applying solving steps.
-    pub fn solve(&self, sudoku: &Sudoku, check_step: bool) -> Result<(Sudoku, Vec<Step>), SolverError> {
+    pub fn solve(
+        &self,
+        sudoku: &Sudoku,
+        check_step: bool,
+    ) -> Result<(Sudoku, Vec<Step>), SolverError> {
         let mut sudoku = sudoku.clone();
         sudoku.init_candidates();
 
@@ -37,7 +47,12 @@ impl StrategySolver {
             {
                 count += 1;
 
-                println!("STRATEGY ({:02}): {:?}, STEP: {:?}", count, strategy.name(), step);
+                println!(
+                    "STRATEGY ({:02}): {:?}, STEP: {:?}",
+                    count,
+                    strategy.name(),
+                    step
+                );
                 steps.push(step.clone());
                 self.apply(&step, &mut sudoku);
 
@@ -45,7 +60,7 @@ impl StrategySolver {
                     Solver::find_unique(&sudoku)?;
                 }
             } else {
-                return Err(SolverError::Unsolvable);
+                return Solver::find_unique(&sudoku).and(Err(SolverError::StrategyNotFound));
             }
 
             if sudoku.is_solved() {
@@ -66,6 +81,9 @@ impl StrategySolver {
         self.push_strategy(Box::new(HiddenSubset::quadruple()));
         self.push_strategy(Box::new(LockedCandidate::new()));
         self.push_strategy(Box::new(PointingTuple::new()));
+        self.push_strategy(Box::new(XWing::new()));
+        self.push_strategy(Box::new(Swordfish::new()));
+        self.push_strategy(Box::new(Jellyfish::new()));
     }
 
     /// Adds a single strategy

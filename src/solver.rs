@@ -4,6 +4,8 @@ use crate::sudoku::Sudoku;
 
 #[derive(Debug, PartialEq)]
 pub enum SolverError {
+    /// There exists a single solution but there is no strategy that finds the next step
+    StrategyNotFound,
     /// There is no single solution found
     Unsolvable,
     /// There is more than one solution
@@ -15,6 +17,7 @@ pub enum SolverError {
 impl fmt::Display for SolverError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
+            SolverError::StrategyNotFound => format!("No suitable strategy found, but solution exists."),
             SolverError::Unsolvable => format!("No solution found."),
             SolverError::TooManySolutions(n) => {
                 format!("There is no unique solution (count: {})", n)
@@ -173,5 +176,19 @@ mod tests {
             .solutions
             .iter()
             .all(|solution| expected.contains(solution)));
+    }
+
+    #[test]
+    fn solve_hard_sudokus() {
+        let sudokus = [
+            r"...1.4.96 ..9....1. 1.59..... ..4..1972 .18792.3. 2974..1.8 ...2.83.9 48.379... 9..5.678.",
+            // Y-Wing
+            // r"51.394.69 .631..4.9 ..47.6.31 ...4..1.. 43..71..2 1.82.9.4. ...942316 641..3..7 329617..4",
+        ];
+
+        for sudoku in sudokus.iter() {
+            let sudoku = Sudoku::try_from(*sudoku).unwrap();
+            assert!(Solver::find_unique(&sudoku).is_ok());
+        }
     }
 }

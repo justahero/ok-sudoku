@@ -8,6 +8,7 @@ mod pointing_tuple;
 mod jellyfish;
 mod swordfish;
 mod xwing;
+mod ywing;
 
 pub(crate) use fish::find_fish;
 pub(crate) use hidden_single::HiddenSingle;
@@ -19,6 +20,7 @@ pub(crate) use naked_subset::NakedSubset;
 pub(crate) use pointing_tuple::PointingTuple;
 pub(crate) use swordfish::Swordfish;
 pub(crate) use xwing::XWing;
+pub(crate) use ywing::YWing;
 
 use itertools::Itertools;
 use crate::{Cell, strategy::step::Step};

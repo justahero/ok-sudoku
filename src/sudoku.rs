@@ -143,6 +143,11 @@ impl Sudoku {
     pub const COLS: u8 = 9;
     pub const NUM_FIELDS: usize = 81;
 
+    /// Creates a new empty Sudoku
+    pub fn empty() -> Self {
+        Self::new([0_u8; Self::NUM_FIELDS].to_vec()).expect("Failed to create empty Sudoku")
+    }
+
     /// Create a new grid from a list of values
     pub fn new(fields: Vec<u8>) -> Result<Self, GridError> {
         if fields.len() != Self::NUM_FIELDS as usize {

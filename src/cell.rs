@@ -192,11 +192,40 @@ impl Cell {
     pub fn col(&self) -> usize {
         self.index % Sudoku::COLS as usize
     }
+
+    /// Returns the box / house this cell is in
+    pub fn block(&self) -> usize {
+        let row = self.row() as u8 / Sudoku::BLOCK_SIZE % Sudoku::BLOCK_SIZE;
+        let col = self.col() as u8 / Sudoku::BLOCK_SIZE;
+        (row * Sudoku::BLOCK_SIZE + col) as usize
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::Sudoku;
+
     use super::Candidates;
+
+    #[test]
+    fn cell_block_indices() {
+        let sudoku = Sudoku::empty();
+        let expected_blocks: Vec<u8> = vec![
+            0, 0, 0, 1, 1, 1, 2, 2, 2,
+            0, 0, 0, 1, 1, 1, 2, 2, 2,
+            0, 0, 0, 1, 1, 1, 2, 2, 2,
+            3, 3, 3, 4, 4, 4, 5, 5, 5,
+            3, 3, 3, 4, 4, 4, 5, 5, 5,
+            3, 3, 3, 4, 4, 4, 5, 5, 5,
+            6, 6, 6, 7, 7, 7, 8, 8, 8,
+            6, 6, 6, 7, 7, 7, 8, 8, 8,
+            6, 6, 6, 7, 7, 7, 8, 8, 8,
+        ];
+
+        for (index, cell) in sudoku.iter().enumerate() {
+            assert_eq!(expected_blocks[index], cell.block() as u8);
+        }
+    }
 
     #[test]
     fn test_candidates_count() {

@@ -179,25 +179,35 @@ impl Cell {
     }
 
     /// Returns the associated index with this cell
+    #[inline(always)]
     pub fn index(&self) -> usize {
         self.index
     }
 
     /// Returns the row this cell is in
+    #[inline(always)]
     pub fn row(&self) -> usize {
         self.index / Sudoku::ROWS as usize
     }
 
     /// Returns the column this cell is in
+    #[inline(always)]
     pub fn col(&self) -> usize {
         self.index % Sudoku::COLS as usize
     }
 
     /// Returns the box / house this cell is in
+    #[inline(always)]
     pub fn block(&self) -> usize {
         let row = self.row() as u8 / Sudoku::BLOCK_SIZE % Sudoku::BLOCK_SIZE;
         let col = self.col() as u8 / Sudoku::BLOCK_SIZE;
         (row * Sudoku::BLOCK_SIZE + col) as usize
+    }
+
+    /// Returns true if this cell "sees" the other cell in same row. column or block (box)
+    #[inline(always)]
+    pub fn sees(&self, rhs: &Self) -> bool {
+        self.col() == rhs.col() || self.row() == rhs.row() || self.block() == rhs.block()
     }
 }
 

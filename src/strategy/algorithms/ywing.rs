@@ -14,26 +14,36 @@ impl Strategy for YWing {
     fn find(&self, sudoku: &Sudoku) -> Option<Step> {
         // get all cells that contain exactly 2 candidates
         let cells = sudoku.iter().filter(|&cell| cell.candidates().count() == 2).collect_vec();
-        println!(":: CELLS: {:?}", cells);
 
         // The pivot is the bivalue cell with candidates X, Y
         for pivot in cells.iter() {
-            println!(":: PIVOT: {:?}", pivot);
-
-            println!("-- BLOCK {}", pivot.block());
-
-            // find all neighbors that see the given pivot cell
-            let neighbors = cells
-                .iter()
-                .filter(|&cell| cell.index() != pivot.index())
-                .filter(|&cell| {
-                    cell.row() == pivot.row() || cell.col() == pivot.col() || cell.block() == pivot.block()
-                });
-
-            println!(":: NEIGHBORS: {:?}", neighbors);
-
             if let Some((x, y)) = pivot.candidates().iter().collect_tuple() {
-                // println!(":: PIVOT: {:?}, CANDIDATES: {}, {}, neighbors: {:?}", pivot, x, y, neighbors);
+                // find all neighbors that see the given pivot cell
+                let neighbors = cells
+                    .iter()
+                    .filter(|&cell| cell.index() != pivot.index())
+                    .filter(|&cell| cell.sees(&pivot))
+                    .collect_vec();
+
+                if neighbors.len() >= 2 {
+                    for tuple in neighbors.iter().permutations(2) {
+                        if let Some((&lhs, &rhs)) = tuple.iter().collect_tuple() {
+                            if lhs.has_candidate(x) && rhs.has_candidate(y) {
+                                println!(":: PIVOT: {:?} - TUPLE: {:?}", pivot, tuple);
+
+                                // find all remaining cells that see both pincers
+                                let eliminates = cells
+                                    .iter()
+                                    .filter(|&cell| cell.index() != pivot.index())
+                                    .filter(|&cell| !cell.sees(&pivot))
+                                    .filter(|&cell| cell.sees(lhs) && cell.sees(rhs))
+                                    .collect_vec();
+
+                                println!(">>> ELIMINATES: {:?}", eliminates);
+                            }
+                        }
+                    }
+                }
             }
         }
 

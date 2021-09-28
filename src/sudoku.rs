@@ -401,4 +401,14 @@ mod tests {
         let expected = vec![0u8, 5, 0, 0, 3, 0, 0, 9, 0];
         assert_eq!(expected, actual);
     }
+
+    #[test]
+    fn sees_other_cells() {
+        let sudoku = Sudoku::new(SUDOKU.to_vec()).unwrap();
+        assert!(sudoku.get(1).sees(sudoku.get(11)));
+        assert!(sudoku.get(1).sees(sudoku.get(73)));
+        assert!(sudoku.get(11).sees(sudoku.get(65)));
+        assert!(sudoku.get(73).sees(sudoku.get(65)));
+        assert!(!sudoku.get(1).sees(sudoku.get(65)));
+    }
 }

@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use crate::{Candidates, Cell, Sudoku, strategy::{Strategy, step::Step}};
+use crate::{Cell, Sudoku, strategy::{Strategy, step::Step}};
 
 pub struct YWing {}
 

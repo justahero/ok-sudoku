@@ -1,6 +1,13 @@
 use crate::{solver::SolverError, Solver, Sudoku};
 
-use super::{Strategy, algorithms::{HiddenSingle, HiddenSubset, Jellyfish, LockedCandidate, NakedSingle, NakedSubset, PointingTuple, Swordfish, XWing, YWing}, step::Step};
+use super::{
+    algorithms::{
+        HiddenSingle, HiddenSubset, Jellyfish, LockedCandidate, NakedSingle, NakedSubset,
+        PointingTuple, Swordfish, XWing, YWing,
+    },
+    step::Step,
+    Strategy,
+};
 
 /// The `StrategySolver` is the struct for solving Sudokus
 /// by applying logical strategies that humans can do.

@@ -1,4 +1,4 @@
-use std::{fmt::{Debug, Formatter, Result}, ops::{BitOr, BitOrAssign, Shl}};
+use std::{fmt::{Debug, Formatter, Result}, ops::{BitAnd, BitOr, BitOrAssign, Shl}};
 
 /// Candidates Bitset
 #[derive(Clone, PartialEq, Eq)]
@@ -88,6 +88,14 @@ impl BitOr for Candidates {
 impl BitOrAssign for Candidates {
     fn bitor_assign(&mut self, rhs: Self) {
         self.0 |= rhs.0;
+    }
+}
+
+impl BitAnd for Candidates {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Candidates(self.0 & rhs.0)
     }
 }
 

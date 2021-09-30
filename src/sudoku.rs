@@ -143,6 +143,11 @@ impl Sudoku {
     pub const COLS: u8 = 9;
     pub const NUM_FIELDS: usize = 81;
 
+    /// Creates a new empty Sudoku
+    pub fn empty() -> Self {
+        Self::new([0_u8; Self::NUM_FIELDS].to_vec()).expect("Failed to create empty Sudoku")
+    }
+
     /// Create a new grid from a list of values
     pub fn new(fields: Vec<u8>) -> Result<Self, GridError> {
         if fields.len() != Self::NUM_FIELDS as usize {
@@ -395,5 +400,15 @@ mod tests {
         let actual = sudoku.get_col(5).map(|c| c.digit()).collect::<Vec<_>>();
         let expected = vec![0u8, 5, 0, 0, 3, 0, 0, 9, 0];
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn sees_other_cells() {
+        let sudoku = Sudoku::new(SUDOKU.to_vec()).unwrap();
+        assert!(sudoku.get(1).sees(sudoku.get(11)));
+        assert!(sudoku.get(1).sees(sudoku.get(73)));
+        assert!(sudoku.get(11).sees(sudoku.get(65)));
+        assert!(sudoku.get(73).sees(sudoku.get(65)));
+        assert!(!sudoku.get(1).sees(sudoku.get(65)));
     }
 }

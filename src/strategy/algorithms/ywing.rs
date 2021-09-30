@@ -46,7 +46,7 @@ impl Strategy for YWing {
 
                                         eliminates.iter().for_each(|&cell| step.eliminate_candidate(cell.index(), candidate));
                                         [pivot, lhs, rhs].iter().for_each(|&cell| {
-                                            cell.candidates().iter().for_each(|candidate| step.lock_candidate(cell.index(), candidate));
+                                            step.lock_candidate(cell.index(), cell.candidates());
                                         });
 
                                         return Some(step);
@@ -71,7 +71,7 @@ impl Strategy for YWing {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{Sudoku, strategy::Strategy};
+    use crate::{Candidates, Sudoku, strategy::Strategy};
 
     use super::YWing;
 
@@ -98,12 +98,9 @@ mod tests {
         assert_eq!(&vec![(65, 4)], step.eliminated_candidates());
         assert_eq!(
             &vec![
-                (1, 3),
-                (1, 8),
-                (73, 3),
-                (73, 4),
-                (11, 4),
-                (11, 8),
+                (1, Candidates::new(&[3, 8])),
+                (73, Candidates::new(&[3, 4])),
+                (11, Candidates::new(&[4, 8])),
             ],
             step.locked_candidates(),
         );

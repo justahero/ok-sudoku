@@ -48,9 +48,7 @@ impl NakedSubset {
                     let mut step = Step::new();
 
                     for cell in &group {
-                        for candidate in cell.candidates().iter() {
-                            step.lock_candidate(cell.index(), candidate);
-                        }
+                        step.lock_candidate(cell.index(), cell.candidates());
                     }
 
                     // for all cells outside the naked subset eliminate these candidates
@@ -108,7 +106,7 @@ impl Strategy for NakedSubset {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{strategy::Strategy, Sudoku};
+    use crate::{Candidates, Sudoku, strategy::Strategy};
 
     use super::NakedSubset;
 
@@ -135,7 +133,10 @@ mod tests {
         println!("SUDOKU: {}", sudoku);
         assert_eq!(&vec![(64, 3)], step.eliminated_candidates());
         assert_eq!(
-            &vec![(65, 3), (65, 9), (66, 3), (66, 9)],
+            &vec![
+                (65, Candidates::new(&[3, 9])),
+                (66, Candidates::new(&[3, 9])),
+            ],
             step.locked_candidates(),
         );
     }
@@ -189,13 +190,9 @@ mod tests {
         assert_eq!(&vec![(1, 6)], step.eliminated_candidates(),);
         assert_eq!(
             &vec![
-                (10, 3),
-                (10, 9),
-                (28, 6),
-                (28, 9),
-                (37, 3),
-                (37, 6),
-                (37, 9)
+                (10, Candidates::new(&[3, 9])),
+                (28, Candidates::new(&[6, 9])),
+                (37, Candidates::new(&[3, 6, 9])),
             ],
             step.locked_candidates(),
         );
@@ -238,18 +235,10 @@ mod tests {
         );
         assert_eq!(
             &vec![
-                (56, 4),
-                (56, 6),
-                (56, 7),
-                (56, 9),
-                (64, 4),
-                (64, 9),
-                (65, 4),
-                (65, 7),
-                (65, 9),
-                (74, 4),
-                (74, 6),
-                (74, 7)
+                (56, Candidates::new(&[4, 6, 7, 9])),
+                (64, Candidates::new(&[4, 9])),
+                (65, Candidates::new(&[4, 7, 9])),
+                (74, Candidates::new(&[4, 6, 7])),
             ],
             step.locked_candidates(),
         );

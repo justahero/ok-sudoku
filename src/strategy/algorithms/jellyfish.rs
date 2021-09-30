@@ -31,7 +31,7 @@ impl Strategy for Jellyfish {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{Sudoku, strategy::{Strategy, algorithms::Jellyfish}};
+    use crate::{Candidates, Sudoku, strategy::{Strategy, algorithms::Jellyfish}};
 
     /// See https://www.sudokuwiki.org/Jelly_Fish_Strategy
     #[test]
@@ -68,20 +68,21 @@ mod tests {
             ],
             step.eliminated_candidates()
         );
+
         assert_eq!(
             &vec![
-                (0, 2),
-                (7, 2),
-                (8, 2),
-                (31, 2),
-                (35, 2),
-                (49, 2),
-                (52, 2),
-                (53, 2),
-                (72, 2),
-                (76, 2),
-                (79, 2),
-                (80, 2),
+                (0, 2.into()),
+                (7, 2.into()),
+                (8, 2.into()),
+                (31, 2.into()),
+                (35, 2.into()),
+                (49, 2.into()),
+                (52, 2.into()),
+                (53, 2.into()),
+                (72, 2.into()),
+                (76, 2.into()),
+                (79, 2.into()),
+                (80, 2.into()),
             ],
             step.locked_candidates(),
         );

@@ -55,7 +55,12 @@ mod tests {
 
         assert_eq!(&vec![(31, 5)], step.eliminated_candidates());
         assert_eq!(
-            &vec![(13, 5), (16, 5), (40, 5), (43, 5)],
+            &vec![
+                (13, 5.into()),
+                (16, 5.into()),
+                (40, 5.into()),
+                (43, 5.into()),
+            ],
             step.locked_candidates(),
         );
     }
@@ -95,7 +100,12 @@ mod tests {
             step.eliminated_candidates(),
         );
         assert_eq!(
-            &vec![(9, 1), (13, 1), (36, 1), (40, 1)],
+            &vec![
+                (9, 1.into()),
+                (13, 1.into()),
+                (36, 1.into()),
+                (40, 1.into()),
+            ],
             step.locked_candidates(),
         );
     }

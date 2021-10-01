@@ -31,7 +31,7 @@ impl Strategy for Swordfish {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{Candidates, Sudoku, strategy::{algorithms::Swordfish, Strategy}};
+    use crate::{Sudoku, strategy::{algorithms::Swordfish, Strategy}};
 
     /// Example found here: http://hodoku.sourceforge.net/en/show_example.php?file=bf301&tech=Swordfish
     #[test]

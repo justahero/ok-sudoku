@@ -31,7 +31,7 @@ impl Strategy for Jellyfish {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{Candidates, Sudoku, strategy::{Strategy, algorithms::Jellyfish}};
+    use crate::{Sudoku, strategy::{Strategy, algorithms::Jellyfish}};
 
     /// See https://www.sudokuwiki.org/Jelly_Fish_Strategy
     #[test]

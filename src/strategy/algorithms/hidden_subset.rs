@@ -1,8 +1,8 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::fmt::Debug;
 
 use itertools::Itertools;
 
-use crate::{Cell, Sudoku, strategy::{step::Step, Strategy}, types::IndexVec};
+use crate::{Candidates, Cell, Sudoku, strategy::{step::Step, Strategy}};
 
 #[derive(Debug)]
 pub struct HiddenSubset {
@@ -23,47 +23,47 @@ impl HiddenSubset {
     }
 
     fn find_tuple(&self, cells: &Vec<&Cell>) -> Option<Step> {
-        // Map all candidates to cell indexes
-        let candidates = cells.iter().fold(HashMap::new(), |mut map, &cell| {
-            for candidate in cell.candidates().iter() {
-                if map.get(&candidate).is_none() {
-                    map.insert(candidate, IndexVec::new());
-                }
-                if let Some(index) = map.get_mut(&candidate) {
-                    index.set(cell.index() as u8);
-                }
-            }
-            map
-        });
+        // Group all cells by candidate to their cells that contain them
+        let candidates = cells
+            .iter()
+            .flat_map(|&cell| cell.candidates().iter().map(|c| (c, cell)).collect_vec())
+            .into_group_map();
 
         // Find a group that has the same list of indexes, still contains other candidates to hide within
         let group = candidates
             .iter()
-            .filter(|(_index, indexes)| indexes.count() == self.count)
+            .filter(|(_index, indexes)| indexes.len() == self.count as usize)
             .permutations(self.count as usize)
             .filter(|entries| entries.len() <= self.count as usize)
             .find(|entries| entries.iter().map(|(_, indexes)| indexes).all_equal());
 
         if let Some(group) = group {
-            // get indexes where hidden subset is found
-            let found_indexes = group[0].1.iter().collect::<Vec<_>>();
-            let found_candidates = group.iter().map(|(&c, _)| c).collect::<Vec<_>>();
+            let found_cells = group[0].1.iter().collect_vec();
 
-            // get all sorted pairs of (index, candidate)
-            let candidates: Vec<(u8, u8)> = candidates
+            // get all candidates from neighbors outside the hidden tuple
+            let candidates = &cells
                 .iter()
-                .filter(|tuple| !found_candidates.contains(tuple.0))
-                .flat_map(|(&candidate, indexes)| indexes.iter().map(move |index| (index, candidate)))
-                .filter(|(index, _candidate)| found_indexes.contains(&index))
-                .sorted_by(|lhs, rhs| lhs.cmp(rhs))
-                .collect::<Vec<_>>();
+                .filter(|&cell| !found_cells.contains(&cell))
+                .fold(Candidates::empty(), |mut result, &cell| {
+                    result |= cell.candidates();
+                    result
+                });
 
-            let mut step = Step::new();
-            for (index, candidate) in candidates.iter() {
-                step.eliminate_candidate((*index) as usize, *candidate);
+            // find all candidates that can be eliminated from hidden tuple
+            let mut eliminates: Vec<(usize, Candidates)> = Vec::new();
+            for &cell in found_cells {
+                let result = Candidates::intersect(candidates, &cell.candidates());
+                if result.count() > 0 {
+                    eliminates.push((cell.index(), result));
+                }
             }
 
-            if !candidates.is_empty() {
+            // there are any candidates to eliminate
+            if !eliminates.is_empty() {
+                let mut step = Step::new();
+                for (index, candidates) in eliminates {
+                    candidates.iter().for_each(|candidate| step.eliminate_candidate(index, candidate));
+                }
                 return Some(step);
             }
         }
@@ -170,7 +170,7 @@ mod tests {
 
         let step = step.unwrap();
         assert_eq!(
-            &vec![(44_usize, 6_u8)],
+            &vec![(44, 6)],
             step.eliminated_candidates(),
         );
     }

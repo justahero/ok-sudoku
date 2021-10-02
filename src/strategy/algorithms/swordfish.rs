@@ -31,10 +31,7 @@ impl Strategy for Swordfish {
 mod tests {
     use std::convert::TryFrom;
 
-    use crate::{
-        strategy::{algorithms::Swordfish, Strategy},
-        Sudoku,
-    };
+    use crate::{Sudoku, strategy::{algorithms::Swordfish, Strategy}};
 
     /// Example found here: http://hodoku.sourceforge.net/en/show_example.php?file=bf301&tech=Swordfish
     #[test]
@@ -59,7 +56,14 @@ mod tests {
 
         assert_eq!(&vec![(52, 2), (54, 2)], step.eliminated_candidates());
         assert_eq!(
-            &vec![(9, 2), (13, 2), (22, 2), (25, 2), (72, 2), (79, 2),],
+            &vec![
+                (9, 2.into()),
+                (13, 2.into()),
+                (22, 2.into()),
+                (25, 2.into()),
+                (72, 2.into()),
+                (79, 2.into()),
+            ],
             step.locked_candidates(),
         );
     }

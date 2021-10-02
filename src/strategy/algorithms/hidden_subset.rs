@@ -25,7 +25,7 @@ impl HiddenSubset {
     fn find_tuple(&self, cells: &Vec<&Cell>) -> Option<Step> {
         // Map all candidates to cell indexes
         let candidates = cells.iter().fold(HashMap::new(), |mut map, &cell| {
-            for candidate in cell.candidates_vec() {
+            for candidate in cell.candidates().iter() {
                 if map.get(&candidate).is_none() {
                     map.insert(candidate, IndexVec::new());
                 }

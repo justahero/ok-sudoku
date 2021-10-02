@@ -63,7 +63,7 @@ where
                         let mut step = Step::new();
 
                         for index in indexes {
-                            step.lock_candidate(*index, candidate)
+                            step.lock_candidate(*index, candidate.into())
                         }
                         for neighbor in eliminates {
                             step.eliminate_candidate(neighbor.index(), candidate)

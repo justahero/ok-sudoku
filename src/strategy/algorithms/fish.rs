@@ -69,7 +69,7 @@ where
                     subset
                         .iter()
                         .sorted_by(|&l, &r| l.index().cmp(&r.index()))
-                        .for_each(|&l| step.lock_candidate(l.index(), candidate));
+                        .for_each(|&l| step.lock_candidate(l.index(), candidate.into()));
                     eliminates
                         .iter()
                         .sorted_by(|&l, &r| l.index().cmp(&r.index()))

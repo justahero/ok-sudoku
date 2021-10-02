@@ -22,6 +22,13 @@ impl Candidates {
         Candidates(bits)
     }
 
+    /// Creates a new Candidates set from a list of given candidate values
+    pub fn new(candidates: &[u8]) -> Self {
+        let mut result = Candidates::empty();
+        candidates.iter().for_each(|&c| result.set(c));
+        result
+    }
+
     /// Returns true if the candidates set is empty
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
@@ -63,10 +70,17 @@ impl Candidates {
     }
 
     /// Returns the intersection of two bit sets
+    #[inline(always)]
     pub fn intersect(lhs: &Self, rhs: &Self) -> Self {
         let mut lhs = lhs.clone();
         lhs.0 &= rhs.0;
         lhs
+    }
+}
+
+impl From<u8> for Candidates {
+    fn from(candidate: u8) -> Self {
+        Candidates::from(1_u16.shl(candidate - 1))
     }
 }
 

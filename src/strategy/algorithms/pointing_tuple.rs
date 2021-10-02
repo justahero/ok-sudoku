@@ -77,7 +77,7 @@ mod tests {
 
         let step = strategy.find(&sudoku).expect("Should return step");
         assert_eq!(
-            &vec![(18_usize, 5), (19_usize, 5)],
+            &vec![(18, 5.into()), (19, 5.into())],
             step.locked_candidates(),
         );
         assert_eq!(&vec![(24_usize, 5)], step.eliminated_candidates());
@@ -107,7 +107,7 @@ mod tests {
 
         let step = strategy.find(&sudoku).expect("Should return step");
         assert_eq!(
-            &vec![(64_usize, 7), (73_usize, 7)],
+            &vec![(64, 7.into()), (73, 7.into())],
             step.locked_candidates(),
         );
         assert_eq!(&vec![(37_usize, 7)], step.eliminated_candidates());

@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use itertools::Itertools;
-
 use crate::{
     strategy::{step::Step, Strategy},
     Cell, Sudoku,
@@ -32,7 +30,6 @@ impl HiddenSingle {
         // Find the candidate that is in a single cell
         if let Some((&digit, indexes)) = candidates.iter().find(|&(_, list)| list.len() == 1) {
             let cell_index = indexes[0];
-            let cell_indexes = cells.iter().map(|&cell| cell.index()).collect_vec();
 
             let mut step = Step::new();
             step.set_digit(cell_index, digit);
@@ -47,7 +44,7 @@ impl HiddenSingle {
             // eliminate all candidates from same house
             sudoku
                 .get_house(cell_index)
-                .filter(|&cell| !cell_indexes.contains(&cell.index()))
+                .filter(|&cell| !cells.contains(&cell))
                 .filter(|&cell| cell.has_candidate(digit))
                 .for_each(|cell| step.eliminate_candidate(cell.index(), digit));
 

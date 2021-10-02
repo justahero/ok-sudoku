@@ -1,3 +1,5 @@
+use crate::Candidates;
+
 /// A single solving step to either eliminate candidate or find digit
 ///
 /// TODO check if instead of `u8` the `Candidates` struct is more useful here
@@ -9,7 +11,7 @@ pub struct Step {
     /// The list of candidates to eliminate for each cell index
     eliminated_candidates: Vec<(usize, u8)>,
     /// The list of constrained candidates
-    constrained_candidates: Vec<(usize, u8)>,
+    constrained_candidates: Vec<(usize, Candidates)>,
 }
 
 impl Step {
@@ -49,12 +51,12 @@ impl Step {
     }
 
     /// Mark candidate as constrained / locked
-    pub fn lock_candidate(&mut self, index: usize, candidate: u8) {
-        self.constrained_candidates.push((index, candidate));
+    pub fn lock_candidate(&mut self, index: usize, candidates: Candidates) {
+        self.constrained_candidates.push((index, candidates));
     }
 
     /// Returns list of locked / constrained candidates
-    pub fn locked_candidates(&self) -> &Vec<(usize, u8)> {
+    pub fn locked_candidates(&self) -> &Vec<(usize, Candidates)> {
         &self.constrained_candidates
     }
 }

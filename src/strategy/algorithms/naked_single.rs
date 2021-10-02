@@ -22,7 +22,7 @@ impl Strategy for NakedSingle {
 
             // remove the digit from neighbors in same house
             for neighbor in sudoku.get_house(cell.index()) {
-                if neighbor.candidates().get(candidate) {
+                if neighbor.has_candidate(candidate) {
                     step.eliminate_candidate(neighbor.index(), candidate);
                 }
             }

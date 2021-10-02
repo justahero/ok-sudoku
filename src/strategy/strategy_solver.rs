@@ -35,8 +35,6 @@ impl StrategySolver {
         let mut sudoku = sudoku.clone();
         sudoku.init_candidates();
 
-        println!("SOLVE: {}", sudoku);
-
         let mut steps = vec![];
         let mut count = 0usize;
 
@@ -48,12 +46,6 @@ impl StrategySolver {
             {
                 count += 1;
 
-                println!(
-                    "STRATEGY ({:02}): {:?}, STEP: {:?}",
-                    count,
-                    strategy.name(),
-                    step
-                );
                 steps.push(step.clone());
                 self.apply(&step, &mut sudoku);
 

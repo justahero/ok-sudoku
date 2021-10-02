@@ -26,33 +26,44 @@ impl Strategy for YWing {
                     .filter(|&cell| cell.sees(&pivot))
                     .collect_vec();
 
-                if neighbors.len() >= 2 {
-                    // find the pincers, the cells that share candidates x, y each
-                    for tuple in neighbors.iter().permutations(2) {
-                        if let Some((&lhs, &rhs)) = tuple.iter().collect_tuple() {
-                            let shared = lhs.candidates() & rhs.candidates();
-                            if lhs.has_candidate(x) && rhs.has_candidate(y) && shared.count() == 1 {
-                                if let Some(candidate) = shared.iter().nth(0) {
-                                    let eliminates: Vec<&&Cell> = empty_cells
-                                        .iter()
-                                        .filter(|&cell| cell.index() != pivot.index())
-                                        .filter(|&cell| !cell.sees(&pivot))
-                                        .filter(|&cell| cell.sees(lhs) && cell.sees(rhs))
-                                        .filter(|&cell| cell.has_candidate(candidate))
-                                        .collect_vec();
+                if neighbors.len() < 2 {
+                    continue;
+                }
 
-                                    if !eliminates.is_empty() {
-                                        let mut step = Step::new();
+                // find the pincers, the cells that share candidates x, y each
+                for tuple in neighbors.iter().permutations(2) {
+                    if let Some((&lhs, &rhs)) = tuple.iter().collect_tuple() {
+                        if !(lhs.has_candidate(x) && rhs.has_candidate(y)) {
+                            continue;
+                        }
 
-                                        eliminates.iter().for_each(|&cell| step.eliminate_candidate(cell.index(), candidate));
-                                        [pivot, lhs, rhs].iter().for_each(|&cell| {
-                                            step.lock_candidate(cell.index(), cell.candidates());
-                                        });
+                        let shared = lhs.candidates() & rhs.candidates();
+                        if shared.count() != 1 {
+                            continue;
+                        }
 
-                                        return Some(step);
-                                    }
-                                }
-                            }
+                        let z = shared.iter().next().expect("Failed to get first item");
+                        if pivot.has_candidate(z) {
+                            continue;
+                        }
+
+                        let eliminates: Vec<&&Cell> = empty_cells
+                            .iter()
+                            .filter(|&cell| cell.index() != pivot.index())
+                            .filter(|&cell| !cell.sees(&pivot))
+                            .filter(|&cell| cell.sees(lhs) && cell.sees(rhs))
+                            .filter(|&cell| cell.has_candidate(z))
+                            .collect_vec();
+
+                        if !eliminates.is_empty() {
+                            let mut step = Step::new();
+
+                            eliminates.iter().for_each(|&cell| step.eliminate_candidate(cell.index(), z));
+                            [pivot, lhs, rhs].iter().for_each(|&cell| {
+                                step.lock_candidate(cell.index(), cell.candidates());
+                            });
+
+                            return Some(step);
                         }
                     }
                 }
@@ -104,5 +115,26 @@ mod tests {
             ],
             step.locked_candidates(),
         );
+    }
+
+    #[test]
+    fn detect_no_ywing() {
+        let sudoku = r"
+            ...5...29
+            ....821..
+            8..9....3
+            .512.7.4.
+            .........
+            .6...125.
+            1....8...
+            ..514....
+            67...5...
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        let strategy = YWing::new();
+
+        assert_eq!(None, strategy.find(&sudoku));
     }
 }

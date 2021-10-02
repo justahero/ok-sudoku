@@ -36,15 +36,15 @@ impl StrategySolver {
         sudoku.init_candidates();
 
         let mut steps = vec![];
-        let mut count = 0usize;
+        let mut _count = 0usize;
 
         loop {
-            if let Some((strategy, step)) = self
+            if let Some((_strategy, step)) = self
                 .strategies
                 .iter()
                 .find_map(|strategy| strategy.find(&sudoku).map(|step| (strategy, step)))
             {
-                count += 1;
+                // count += 1;
 
                 steps.push(step.clone());
                 self.apply(&step, &mut sudoku);

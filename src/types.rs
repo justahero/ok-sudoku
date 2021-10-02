@@ -1,6 +1,4 @@
-use bit_vec::BitVec;
-use itertools::Itertools;
-use std::fmt::{Debug, Formatter, Result};
+use std::fmt::Debug;
 
 use crate::Sudoku;
 
@@ -228,39 +226,5 @@ mod tests {
             let block = Index::new(index as u8).block();
             assert_eq!(expected_blocks[index], block);
         }
-    }
-}
-
-/// A Bit Vec indicating which indexes a candidate is in.
-#[derive(Clone, PartialEq, Eq)]
-pub(crate) struct IndexVec(BitVec);
-
-impl IndexVec {
-    pub fn new() -> Self {
-        Self(BitVec::from_elem(82, false))
-    }
-
-    pub fn set(&mut self, index: u8) {
-        self.0.set(index as usize, true);
-    }
-
-    /// Returns the number of set indexes
-    pub fn count(&self) -> u8 {
-        self.0.iter().filter(|v| *v).count() as u8
-    }
-
-    /// Returns an iterator over all indexes
-    pub fn iter(&self) -> impl Iterator<Item = u8> + '_ {
-        self.0
-            .iter()
-            .enumerate()
-            .filter(|(_index, v)| *v)
-            .map(|(index, _)| index as u8)
-    }
-}
-
-impl Debug for IndexVec {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "({})", self.iter().join(", "))
     }
 }

@@ -37,6 +37,7 @@ impl Strategy for YWing {
                             continue;
                         }
 
+                        // TODO refine this check, ensure remaining candidate is the same
                         let shared = lhs.candidates() & rhs.candidates();
                         if shared.count() != 1 {
                             continue;

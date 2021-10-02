@@ -54,24 +54,23 @@ impl Solver {
             solutions: Vec::new(),
         };
 
-        solver.solve_sudoku(&mut sudoku.clone());
+        solver.solve_sudoku(&mut sudoku.clone(), 0);
         solver
     }
 
     /// Brute Force Solver using recursion, trying to find all solutions
-    fn solve_sudoku(&mut self, sudoku: &mut Sudoku) {
+    fn solve_sudoku(&mut self, sudoku: &mut Sudoku, start_index: usize) {
         if sudoku.is_solved() {
             self.solutions.push(sudoku.clone());
             return;
         }
 
-        // TODO find a way to not start from front
-        for index in 0..Sudoku::NUM_FIELDS {
+        for index in start_index..Sudoku::NUM_FIELDS {
             if sudoku.get(index).is_empty() {
                 for value in 1..=9 {
                     if Self::possible(&sudoku, index, value) {
                         sudoku.set_digit(index, value);
-                        self.solve_sudoku(sudoku);
+                        self.solve_sudoku(sudoku, index + 1);
                         sudoku.unset(index);
                     }
                 }
@@ -82,6 +81,7 @@ impl Solver {
     }
 
     /// Slow check if the given value for field row, col can be set
+    #[inline(always)]
     fn possible(sudoku: &Sudoku, index: usize, value: u8) -> bool {
         sudoku.get_house(index).find(|cell| cell.digit() == value).is_none()
     }

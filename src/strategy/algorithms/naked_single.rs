@@ -65,7 +65,7 @@ mod tests {
 
         let step = strategy.find(&sudoku).unwrap();
 
-        assert_eq!(Some(&(20_usize, 5_u8)), step.digit());
+        assert_eq!(Some(&(20, 5)), step.digit());
     }
 
     #[test]
@@ -88,9 +88,9 @@ mod tests {
 
         let step = strategy.find(&sudoku).unwrap();
 
-        assert_eq!(Some(&(1_usize, 3u8)), step.digit());
+        assert_eq!(Some(&(1, 3)), step.digit());
         assert_eq!(
-            &vec![(0_usize, 3_u8), (37_usize, 3_u8)],
+            &vec![(0, 3), (37, 3)],
             step.eliminated_candidates(),
         );
     }

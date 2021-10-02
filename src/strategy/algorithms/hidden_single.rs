@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use itertools::Itertools;
 
 use crate::{
     strategy::{step::Step, Strategy},
@@ -14,36 +14,29 @@ impl HiddenSingle {
     }
 
     fn find_single(sudoku: &Sudoku, cells: &Vec<&Cell>) -> Option<Step> {
-        // Map all candidates to cells
-        let candidates = cells.iter().fold(HashMap::new(), |mut map, &cell| {
-            for candidate in cell.candidates().iter() {
-                if map.get(&candidate).is_none() {
-                    map.insert(candidate, vec![]);
-                }
-                if let Some(entries) = map.get_mut(&candidate) {
-                    entries.push(cell.index());
-                }
-            }
-            map
-        });
+        // Map all candidates to their associated cells
+        let candidates = cells
+            .iter()
+            .flat_map(|&cell| cell.candidates().iter().map(|c| (c, cell)).collect_vec())
+            .into_group_map();
 
         // Find the candidate that is in a single cell
         if let Some((&digit, indexes)) = candidates.iter().find(|&(_, list)| list.len() == 1) {
-            let cell_index = indexes[0];
+            let cell = indexes[0];
 
             let mut step = Step::new();
-            step.set_digit(cell_index, digit);
+            step.set_digit(cell.index(), digit);
 
             // eliminate all other candidates from same cell
-            for c in sudoku.get(cell_index).candidates().iter() {
+            for c in cell.candidates().iter() {
                 if c != digit {
-                    step.eliminate_candidate(cell_index, c);
+                    step.eliminate_candidate(cell.index(), c);
                 }
             }
 
             // eliminate all candidates from same house
             sudoku
-                .get_house(cell_index)
+                .get_house(cell.index())
                 .filter(|&cell| !cells.contains(&cell))
                 .filter(|&cell| cell.has_candidate(digit))
                 .for_each(|cell| step.eliminate_candidate(cell.index(), digit));

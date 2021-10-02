@@ -18,4 +18,3 @@ criterion = "0.3"
 [[bench]]
 name = "solver"
 harness = false
-html_reports = []

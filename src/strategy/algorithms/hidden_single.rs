@@ -28,7 +28,7 @@ impl HiddenSingle {
             step.set_digit(cell.index(), digit);
 
             // eliminate all other candidates from same cell
-            for c in sudoku.get(cell.index()).candidates().iter() {
+            for c in cell.candidates().iter() {
                 if c != digit {
                     step.eliminate_candidate(cell.index(), c);
                 }

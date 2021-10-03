@@ -53,7 +53,14 @@ impl CellState {
         }
     }
 
-    /// Sets the list of candidates
+    /// Unsets the given list of candidates, only resets the candidates that
+    /// are currently in the cell
+    pub fn unset_candidates(&mut self, candidates: &[u8]) {
+        let remaining_candidates = Candidates::diff(&self.candidates(), &candidates.into());
+        *self = CellState::Candidates(remaining_candidates);
+    }
+
+    /// Sets the given list of candidates
     pub fn set_candidates(&mut self, candidates: Candidates) {
         *self = CellState::Candidates(candidates);
     }
@@ -149,6 +156,11 @@ impl Cell {
     /// Unsets a single candidate from the cell, returns true if successful
     pub fn unset_candidate(&mut self, candidate: u8) -> bool {
         self.state.unset_candidate(candidate)
+    }
+
+    /// Unsets a set of Candidates
+    pub fn unset_candidates(&mut self, candidates: &[u8]) {
+        self.state.unset_candidates(candidates);
     }
 
     /// Returns the list of candidates if available

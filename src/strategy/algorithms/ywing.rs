@@ -51,7 +51,6 @@ impl Strategy for YWing {
                         let eliminates: Vec<&&Cell> = empty_cells
                             .iter()
                             .filter(|&cell| cell.index() != pivot.index())
-                            .filter(|&cell| !cell.sees(&pivot))
                             .filter(|&cell| cell.sees(lhs) && cell.sees(rhs))
                             .filter(|&cell| cell.has_candidate(z))
                             .collect_vec();
@@ -113,6 +112,71 @@ mod tests {
                 (1, Candidates::new(&[3, 8])),
                 (73, Candidates::new(&[3, 4])),
                 (11, Candidates::new(&[4, 8])),
+            ],
+            step.locked_candidates(),
+        );
+    }
+
+    /// A more elaborate YWing from "Good Sudoku Daily Arcade Challenge" (3th October 2021)
+    #[test]
+    fn find_ywing_eliminate_in_pivot_box() {
+        let sudoku = r"
+            .6..8..3.
+            895...7.2
+            .........
+            179......
+            246851.7.
+            ..89.712.
+            .....8..7
+            617.3.58.
+            98..7..6.
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.init_candidates();
+        // naked subset (2)
+        sudoku.get_mut(53).unset_candidates(&[3, 5]);
+        // naked subset (2)
+        sudoku.get_mut(33).unset_candidate(3);
+        sudoku.get_mut(35).unset_candidate(3);
+        // naked subset (4)
+        sudoku.get_mut(24).unset_candidates(&[4, 9]);
+        sudoku.get_mut(33).unset_candidate(4);
+        // naked subset (4)
+        sudoku.get_mut(26).unset_candidates(&[1, 4, 5, 9]);
+        // naked subset (2)
+        sudoku.get_mut(21).unset_candidate(6);
+        sudoku.get_mut(22).unset_candidate(6);
+        sudoku.get_mut(23).unset_candidate(6);
+        // locked candidate
+        sudoku.get_mut(21).unset_candidate(3);
+        sudoku.get_mut(23).unset_candidate(3);
+        // naked subset (4)
+        sudoku.get_mut(14).unset_candidate(4);
+        sudoku.get_mut(32).unset_candidates(&[2, 4]);
+        // locked candidate
+        sudoku.get_mut(57).unset_candidate(2);
+        sudoku.get_mut(58).unset_candidate(2);
+        sudoku.get_mut(75).unset_candidate(2);
+        sudoku.get_mut(77).unset_candidate(2);
+        // locked candidate
+        sudoku.get_mut(57).unset_candidate(5);
+        // XWing
+        sudoku.get_mut(23).unset_candidate(9);
+        sudoku.get_mut(60).unset_candidate(9);
+        // naked subset (4)
+        sudoku.get_mut(57).unset_candidate(4);
+        sudoku.get_mut(58).unset_candidate(4);
+        sudoku.get_mut(61).unset_candidate(4);
+        let strategy = YWing::new();
+
+        let step = strategy.find(&sudoku).unwrap();
+        assert_eq!(&vec![(25, 9)], step.eliminated_candidates());
+        assert_eq!(
+            &vec![
+                (16, Candidates::new(&[1, 4])),
+                (61, Candidates::new(&[1, 9])),
+                (6, Candidates::new(&[4, 9])),
             ],
             step.locked_candidates(),
         );

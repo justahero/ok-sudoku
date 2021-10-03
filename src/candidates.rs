@@ -76,6 +76,21 @@ impl Candidates {
         lhs.0 &= rhs.0;
         lhs
     }
+
+    /// Removes the given list of candidates from the existing ones
+    /// Only removes a candidate if it's actually set
+    #[inline(always)]
+    pub fn diff(lhs: &Self, rhs: &Self) -> Self {
+        let mut lhs = lhs.clone();
+        rhs.iter().for_each(|candidate| lhs.unset(candidate));
+        lhs
+    }
+}
+
+impl From<&[u8]> for Candidates {
+    fn from(candidates: &[u8]) -> Self {
+        Candidates::new(candidates)
+    }
 }
 
 impl From<u8> for Candidates {
@@ -220,5 +235,12 @@ mod tests {
             vec![2, 4, 5, 6],
             result.iter().collect::<Vec<_>>(),
         );
+    }
+
+    #[test]
+    fn candidates_diff() {
+        let lhs = Candidates::new(&[1, 4, 6, 8]);
+        let rhs = Candidates::new(&[1, 4, 7]);
+        assert_eq!(Candidates::new(&[6, 8]), Candidates::diff(&lhs, &rhs));
     }
 }

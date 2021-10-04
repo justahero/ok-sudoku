@@ -160,7 +160,7 @@ mod tests {
             ...3..7..
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = HiddenSingle::new();
 
         assert_eq!(None, strategy.find(&sudoku));

@@ -71,8 +71,7 @@ mod tests {
             638..9751
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = PointingTuple::new();
 
         let step = strategy.find(&sudoku).expect("Should return step");
@@ -99,7 +98,6 @@ mod tests {
         ";
 
         let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
         // remove a few candidates to reflect linked Sudoku example exactly
         sudoku.get_mut(68).unset_candidate(6);
         sudoku.get_mut(38).unset_candidate(5);

@@ -123,8 +123,7 @@ mod tests {
             ..5.1..94
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = HiddenSubset::pair();
 
         let step = strategy.find(&sudoku);
@@ -161,8 +160,7 @@ mod tests {
             964513...
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = HiddenSubset::pair();
 
         let step = strategy.find(&sudoku);

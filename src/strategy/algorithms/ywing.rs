@@ -101,8 +101,7 @@ mod tests {
             2.7.86..9
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = YWing::new();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -133,7 +132,6 @@ mod tests {
         ";
 
         let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
         // naked subset (2)
         sudoku.get_mut(53).unset_candidates(&[3, 5]);
         // naked subset (2)
@@ -183,6 +181,35 @@ mod tests {
     }
 
     #[test]
+    fn find_ywing_in_same_box() {
+        let sudoku = r"
+            .67918.2.
+            ...63..7.
+            ..32.7618
+            8..1.37..
+            3197..862
+            7..8.91..
+            6.53724.1
+            .7..81..6
+            .3..962.7
+        ";
+
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
+        let strategy = YWing::new();
+
+        let step = strategy.find(&sudoku).unwrap();
+        assert_eq!(&vec![(25, 9)], step.eliminated_candidates());
+        assert_eq!(
+            &vec![
+                (16, Candidates::new(&[1, 4])),
+                (61, Candidates::new(&[1, 9])),
+                (6, Candidates::new(&[4, 9])),
+            ],
+            step.locked_candidates(),
+        );
+    }
+
+    #[test]
     fn detect_no_ywing() {
         let sudoku = r"
             ...5...29
@@ -196,8 +223,7 @@ mod tests {
             67...5...
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = YWing::new();
 
         assert_eq!(None, strategy.find(&sudoku));

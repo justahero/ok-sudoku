@@ -125,8 +125,7 @@ mod tests {
             5....4.1.
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = NakedSubset::pair();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -156,8 +155,7 @@ mod tests {
             1.4......
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = NakedSubset::triple();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -182,8 +180,7 @@ mod tests {
             .4.961253
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = NakedSubset::triple();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -213,8 +210,7 @@ mod tests {
             ...3...98
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = NakedSubset::quadruple();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -259,7 +255,6 @@ mod tests {
         ";
 
         let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
         sudoku.get_mut(23).unset_candidate(4);
         sudoku.get_mut(26).unset_candidate(1);
         sudoku.get_mut(26).unset_candidate(2);

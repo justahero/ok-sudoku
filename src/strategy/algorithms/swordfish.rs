@@ -48,8 +48,7 @@ mod tests {
             ..71645.3
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = Swordfish::new();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -77,8 +76,7 @@ mod tests {
 
         let strategy = Swordfish::new();
         for sudoku in sudokus.iter() {
-            let mut sudoku = Sudoku::try_from(*sudoku).unwrap();
-            sudoku.init_candidates();
+            let sudoku = Sudoku::try_from(*sudoku).unwrap();
 
             assert!(strategy.find(&sudoku).is_some());
         }
@@ -96,8 +94,7 @@ mod tests {
 
         let strategy = Swordfish::new();
         for sudoku in sudokus.iter() {
-            let mut sudoku = Sudoku::try_from(*sudoku).unwrap();
-            sudoku.init_candidates();
+            let sudoku = Sudoku::try_from(*sudoku).unwrap();
 
             assert!(strategy.find(&sudoku).is_none());
         }

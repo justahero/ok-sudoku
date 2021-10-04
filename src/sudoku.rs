@@ -170,7 +170,9 @@ impl Sudoku {
             })
             .collect();
 
-        Ok(Sudoku { cells: cells? })
+        let mut sudoku = Sudoku { cells: cells? };
+        sudoku.init_candidates();
+        Ok(sudoku)
     }
 
     /// Initializes all empty fields with candidates.
@@ -377,13 +379,11 @@ mod tests {
             1, 0, 0, 9, 4, 0, 0, 0, 2,
         ];
 
-        let mut sudoku = Sudoku::new(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::new(sudoku).unwrap();
+        let candidates = sudoku.get(1).candidates();
 
-        let c = sudoku.get(1).candidates();
-
-        assert_eq!(2, c.count());
-        assert_eq!(vec![1u8, 2], c.iter().collect::<Vec<_>>());
+        assert_eq!(2, candidates.count());
+        assert_eq!(vec![1u8, 2], candidates.iter().collect::<Vec<_>>());
     }
 
     #[test]

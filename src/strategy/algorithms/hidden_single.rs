@@ -98,8 +98,7 @@ mod tests {
             ...3..7..
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = HiddenSingle::new();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -125,7 +124,6 @@ mod tests {
         ";
 
         let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
         sudoku.get_mut(46).unset_candidate(4);
         let strategy = HiddenSingle::new();
 
@@ -162,8 +160,7 @@ mod tests {
             ...3..7..
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = HiddenSingle::new();
 
         assert_eq!(None, strategy.find(&sudoku));

@@ -53,6 +53,7 @@ impl Step {
     /// Mark candidate as constrained / locked
     pub fn lock_candidate(&mut self, index: usize, candidates: Candidates) {
         self.constrained_candidates.push((index, candidates));
+        self.constrained_candidates.sort_by_key(|(left, _)| left.clone());
     }
 
     /// Returns list of locked / constrained candidates

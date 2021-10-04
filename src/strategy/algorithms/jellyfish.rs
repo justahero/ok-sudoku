@@ -48,8 +48,7 @@ mod tests {
             ..63.97..
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = Jellyfish::new();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -97,8 +96,7 @@ mod tests {
 
         let strategy = Jellyfish::new();
         for sudoku in sudokus.iter() {
-            let mut sudoku = Sudoku::try_from(*sudoku).unwrap();
-            sudoku.init_candidates();
+            let sudoku = Sudoku::try_from(*sudoku).unwrap();
 
             println!("SUDOKU: {}", sudoku);
             let step = strategy.find(&sudoku);

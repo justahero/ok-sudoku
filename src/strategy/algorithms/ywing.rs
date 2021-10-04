@@ -33,11 +33,15 @@ impl Strategy for YWing {
                 // find the pincers, the cells that share candidates x, y each
                 for tuple in neighbors.iter().permutations(2) {
                     if let Some((&lhs, &rhs)) = tuple.iter().collect_tuple() {
+                        if lhs.sees(rhs) {
+                            continue;
+                        }
+
                         if !(lhs.has_candidate(x) && rhs.has_candidate(y)) {
                             continue;
                         }
 
-                        // TODO refine this check, ensure remaining candidate is the same
+                        // ensure there is the same remaining candidate in both cells
                         let shared = lhs.candidates() & rhs.candidates();
                         if shared.count() != 1 {
                             continue;
@@ -101,8 +105,7 @@ mod tests {
             2.7.86..9
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = YWing::new();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -110,8 +113,8 @@ mod tests {
         assert_eq!(
             &vec![
                 (1, Candidates::new(&[3, 8])),
-                (73, Candidates::new(&[3, 4])),
                 (11, Candidates::new(&[4, 8])),
+                (73, Candidates::new(&[3, 4])),
             ],
             step.locked_candidates(),
         );
@@ -133,7 +136,6 @@ mod tests {
         ";
 
         let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
         // naked subset (2)
         sudoku.get_mut(53).unset_candidates(&[3, 5]);
         // naked subset (2)
@@ -174,9 +176,43 @@ mod tests {
         assert_eq!(&vec![(25, 9)], step.eliminated_candidates());
         assert_eq!(
             &vec![
+                (6, Candidates::new(&[4, 9])),
                 (16, Candidates::new(&[1, 4])),
                 (61, Candidates::new(&[1, 9])),
-                (6, Candidates::new(&[4, 9])),
+            ],
+            step.locked_candidates(),
+        );
+    }
+
+    #[test]
+    fn find_ywing_in_same_box() {
+        let sudoku = r"
+            .67918.2.
+            ...63..7.
+            ..32.7618
+            8..1.37..
+            3197..862
+            7..8.91..
+            6.53724.1
+            .7..81..6
+            .3..962.7
+        ";
+
+        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
+        sudoku.get_mut(9).unset_candidates(&[4, 5, 9]);
+        sudoku.get_mut(10).unset_candidates(&[4, 5, 9]);
+        sudoku.get_mut(11).unset_candidates(&[2, 4]);
+        sudoku.get_mut(19).unset_candidate(5);
+
+        let strategy = YWing::new();
+
+        let step = strategy.find(&sudoku).unwrap();
+        assert_eq!(&vec![(63, 2)], step.eliminated_candidates());
+        assert_eq!(
+            &vec![
+                (9, Candidates::new(&[1, 2])),
+                (65, Candidates::new(&[2, 4])),
+                (72, Candidates::new(&[1, 4])),
             ],
             step.locked_candidates(),
         );
@@ -196,8 +232,7 @@ mod tests {
             67...5...
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = YWing::new();
 
         assert_eq!(None, strategy.find(&sudoku));

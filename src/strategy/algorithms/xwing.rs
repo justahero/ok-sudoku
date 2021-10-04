@@ -47,8 +47,7 @@ mod tests {
             958431267
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = XWing::new();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -80,8 +79,7 @@ mod tests {
             518.2...7
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = XWing::new();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -119,8 +117,7 @@ mod tests {
 
         let strategy = XWing::new();
         for sudoku in sudokus.iter() {
-            let mut sudoku = Sudoku::try_from(*sudoku).unwrap();
-            sudoku.init_candidates();
+            let sudoku = Sudoku::try_from(*sudoku).unwrap();
 
             assert!(strategy.find(&sudoku).is_some());
         }
@@ -135,8 +132,7 @@ mod tests {
 
         let strategy = XWing::new();
         for sudoku in sudokus.iter() {
-            let mut sudoku = Sudoku::try_from(*sudoku).unwrap();
-            sudoku.init_candidates();
+            let sudoku = Sudoku::try_from(*sudoku).unwrap();
 
             println!("SUDOKU: {}", sudoku);
             let step = strategy.find(&sudoku);

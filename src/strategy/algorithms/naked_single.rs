@@ -59,12 +59,10 @@ mod tests {
             .69..3.2.
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = NakedSingle::new();
 
         let step = strategy.find(&sudoku).unwrap();
-
         assert_eq!(Some(&(20, 5)), step.digit());
     }
 
@@ -82,8 +80,7 @@ mod tests {
             367.3.18...
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = NakedSingle::new();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -110,8 +107,7 @@ mod tests {
             ..7...1..
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = NakedSingle::new();
 
         assert_eq!(None, strategy.find(&sudoku));

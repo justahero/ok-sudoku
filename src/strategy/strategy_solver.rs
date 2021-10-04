@@ -33,7 +33,7 @@ impl StrategySolver {
         check_step: bool,
     ) -> Result<(Sudoku, Vec<Step>), SolverError> {
         let mut sudoku = sudoku.clone();
-        sudoku.init_candidates();
+        // sudoku.init_candidates();
 
         let mut steps = vec![];
         let mut count = 0usize;

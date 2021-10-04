@@ -65,8 +65,7 @@ mod tests {
             ....39641
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = LockedCandidate::new();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -91,9 +90,7 @@ mod tests {
             641932758
         ";
 
-        let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
-
+        let sudoku = Sudoku::try_from(sudoku).unwrap();
         let strategy = LockedCandidate::new();
 
         let step = strategy.find(&sudoku).unwrap();
@@ -131,7 +128,6 @@ mod tests {
         ";
 
         let mut sudoku = Sudoku::try_from(sudoku).unwrap();
-        sudoku.init_candidates();
 
         // remove the existing locked candidates
         sudoku.get_mut(24).unset_candidate(5);
